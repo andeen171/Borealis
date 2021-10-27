@@ -11,11 +11,11 @@ class OrderListSerializer(serializers.ModelSerializer):
 class CreateOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ('id', 'title', 'description', 'category', 'user')
+        fields = ('id', 'title', 'description', 'image', 'category', 'user')
 
     def create(self, validated_data):
         order = Order(title=validated_data['title'], description=validated_data['description'],
-                      category=validated_data['category'], user=validated_data['user'])
+                      image=validated_data['image'], category=validated_data['category'], user=validated_data['user'])
         order.save()
         return order
 

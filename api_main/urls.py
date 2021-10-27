@@ -6,9 +6,9 @@ from .views import (CreateOrderView, CreateCategoryView, OrdersApiView, CreateOf
 
 urlpatterns = [
     path('orders/', OrdersApiView.as_view()),
-    path('create/order/', CreateOrderView.as_view()),
-    path('create/category/', CreateCategoryView.as_view()),
-    path('create/offer/', CreateOfferView.as_view()),
+    path('order/create/', CreateOrderView.as_view()),
+    path('category/create/', CreateCategoryView.as_view()),
+    path('offer/create/', CreateOfferView.as_view()),
     path('order/<int:order_id>', OrderDetailView.as_view()),
     path('offer/<int:offer_id>', OfferDetailView.as_view()),
     path('technicians/', ListTechnicians.as_view()),

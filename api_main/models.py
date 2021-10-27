@@ -1,8 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from imagekit.models import ProcessedImageField
+from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
-
 
 image_root = 'static/images/'
 
@@ -15,13 +14,9 @@ class Category(models.Model):
 class Order(models.Model):
     title = models.CharField(max_length=256)
     description = models.TextField(max_length=256)
-    image_one = models.ImageField(upload_to=f'{image_root}orders/', null=True)
-    image_two = models.ImageField(upload_to=f'{image_root}orders/', null=True)
-    image_three = models.ImageField(upload_to=f'{image_root}orders/', null=True)
-    image_four = models.ImageField(upload_to=f'{image_root}orders/', null=True)
-    image_five = models.ImageField(upload_to=f'{image_root}orders/', null=True)
-    thumbnail = ProcessedImageField(upload_to=f'{image_root}orders/', processors=[ResizeToFill(100, 100)],
-                                    format='JPEG', options={'quality': 60})
+    image = models.ImageField(upload_to=f'{image_root}orders/')
+    thumbnail = ImageSpecField(source='image', processors=[ResizeToFill(100, 100)],
+                               format='JPEG', options={'quality': 60})
     created_at = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     closed = models.BooleanField(default=False)

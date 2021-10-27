@@ -11,15 +11,15 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Link as RouterLink, Redirect } from "react-router-dom";
-import { register } from "../actions/auth";
-import Copyright from "./layout/copyright";
+import { register } from "../actions";
+import Copyright from "./layout/Copyright";
 import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actionCreators } from "../actionCreators";
 
 const theme = createTheme();
 
-export default function ClientRegisterPage() {
+export default function RegisterPage() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const { register } = bindActionCreators(actionCreators, dispatch);
