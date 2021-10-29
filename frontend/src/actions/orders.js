@@ -39,11 +39,25 @@ export const deleteOrder = (id) => (dispatch, getState) => {
 
 export const createOrder = (order) => (dispatch, getState) => {
   axios
-    .post("/api/leads/create/", order, tokenConfig(getState))
+    .post("/api/order/create/", order, tokenConfig(getState))
     .then((res) => {
       dispatch(createMessage({ createOrder: "Order created" }));
       dispatch({
         type: CREATE_ORDER,
+        payload: res.data,
+      });
+    })
+    .catch((err) =>
+      dispatch(returnErrors(err.response.data, err.response.status))
+    );
+};
+
+export const getOrderDetails = (orderCode) => (dispatch, getState) => {
+  axios
+    .get(`/api/order/${orderCode}/`, tokenConfig(getState))
+    .then((res) => {
+      dispatch({
+        type: GET_ORDER_DETAILS,
         payload: res.data,
       });
     })

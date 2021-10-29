@@ -8,6 +8,16 @@ import {
 
 const initialState = {
   orders: [],
+  order: {
+    title: "",
+    description: "",
+    image: [],
+    created_at: "",
+    closed: "",
+    closed_at: "",
+    category: 0,
+    user: null,
+  },
 };
 
 const reducer = (state = initialState, action) => {
@@ -26,6 +36,12 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         orders: [...state.orders, action.payload],
+      };
+    case GET_ORDER_DETAILS:
+      return {
+        ...state,
+        order: action.payload.order,
+        offers: action.payload.order,
       };
     default:
       return state;
