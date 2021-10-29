@@ -60,6 +60,7 @@ class OrderDetailView(APIView):
         offers = Offer.objects.filter(order=order)
         order_serializer = OrderSerializer(order)
         order = order_serializer.data
+        order['image'] = [{'src': order['image']}]
         if offers.exists() and not request.user.is_staff:
             offers_serializer = OfferListSerializer(offers, many=True)
             offers = offers_serializer.data

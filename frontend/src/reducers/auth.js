@@ -24,6 +24,7 @@ const reducer = (state = initialState, action) => {
         isLoading: true,
       };
     case USER_LOADED:
+      localStorage.setItem("isAuthenticated", "true");
       return {
         ...state,
         isAuthenticated: true,
@@ -32,7 +33,7 @@ const reducer = (state = initialState, action) => {
       };
     case LOGIN_SUCCESS:
     case REGISTER_SUCCESS:
-      localStorage.setItem("is_authenticated", "true");
+      localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("token", action.payload.token);
       return {
         ...state,
