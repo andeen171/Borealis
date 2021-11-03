@@ -1,23 +1,32 @@
+from abc import ABC
+
 from rest_framework import serializers
-from .models import Order, Category, Offer, Contract
+from .models import Order, Category, Offer, Contract, Image
 
 
-class OrderListSerializer(serializers.ModelSerializer):
+class ImageSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.ReadOnlyField(source="thumbnail.url")
+
+    class Meta:
+        model = Image
+        fields = ('src', 'thumbnail')
+
+
+class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
 
-
-class CreateOrderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ('id', 'title', 'description', 'image', 'category', 'user')
-
     def create(self, validated_data):
         order = Order(title=validated_data['title'], description=validated_data['description'],
-                      image=validated_data['image'], category=validated_data['category'], user=validated_data['user'])
+                      category=validated_data['category'], user=validated_data['user'])
         order.save()
         return order
+
+
+class OrderImageSerializer(serializers.Serializer):
+    images = ImageSerializer(many=True)
+    info = OrderSerializer()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -26,10 +35,10 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class CreateOfferSerializer(serializers.ModelSerializer):
+class OfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
-        fields = ('problem', 'description', 'value_estimate', 'need_replacement', 'replacements', 'order', 'user')
+        fields = "__all__"
 
     def create(self, validated_data):
         offer = Offer(problem=validated_data['problem'], description=validated_data['description'],
@@ -39,24 +48,6 @@ class CreateOfferSerializer(serializers.ModelSerializer):
                       user=validated_data['user'])
         offer.save()
         return offer
-
-
-class OfferListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Offer
-        fields = "__all__"
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = "__all__"
-
-
-class OfferSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Offer
-        fields = "__all__"
 
 
 class ContractSerializer(serializers.ModelSerializer):

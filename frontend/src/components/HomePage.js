@@ -25,7 +25,7 @@ export default function HomePage() {
         <main>
           <Grid container spacing={5} sx={{ mt: 3 }}>
             {orders.map((post) => (
-              <OrderCard key={post.title} post={post} />
+              <OrderCard key={post.info.title} post={post} />
             ))}
           </Grid>
         </main>

@@ -19,7 +19,7 @@ import { bindActionCreators } from "redux";
 import { actionCreators } from "../actionCreators";
 
 const theme = createTheme();
-export default function SignInSide() {
+export default function LoginPage() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const { login } = bindActionCreators(actionCreators, dispatch);

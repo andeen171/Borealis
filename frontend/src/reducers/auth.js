@@ -11,7 +11,7 @@ import {
 
 const initialState = {
   token: localStorage.getItem("token"),
-  isAuthenticated: localStorage.getItem("isAuthenticated") === "true",
+  isAuthenticated: localStorage.getItem("isAuthenticated"),
   isLoading: false,
   user: null,
 };

@@ -1,29 +1,39 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Order, Category, Offer, Contract
+from .models import Order, Category, Offer, Contract, Image
 from Borealis.permissions import IsClient, IsTechnician
-from .serializers import (OrderListSerializer, CreateOrderSerializer, CategorySerializer,
-                          CreateOfferSerializer, OfferListSerializer, OrderSerializer, OfferSerializer,
-                          ContractSerializer)
+from .serializers import OrderSerializer, CategorySerializer, OfferSerializer, ContractSerializer, OrderImageSerializer
 
 
-class OrdersApiView(generics.ListAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderListSerializer
+class OrdersApiView(APIView):
+    def get(self, request, *args, **kwargs):
+        orders = Order.objects.all()
+        results = []
+        for order in orders:
+            images = Image.objects.filter(order=order)
+            if images.exists():
+                order_image = OrderImageSerializer({'info': order, 'images': images})
+                results.append(order_image.data)
+        return Response(results, status=status.HTTP_200_OK)
 
 
-class CreateOrderView(generics.CreateAPIView):
+class CreateOrderView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsClient,
     ]
-    queryset = Order.objects.all()
-    serializer_class = CreateOrderSerializer
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         request.data['user'] = request.user.id
-        return super(CreateOrderView, self).create(request, *args, **kwargs)
+        serializer = OrderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+        images = request.FILES.getlist('images')
+        for image in images:
+            image = Image(original=image, order=order)
+            image.save()
+        return Response({'Success': 'Order created successfully'}, status=status.HTTP_200_OK)
 
 
 class CreateCategoryView(generics.CreateAPIView):
@@ -40,7 +50,7 @@ class CreateOfferView(generics.CreateAPIView):
         IsTechnician,
     ]
     queryset = Offer.objects.all()
-    serializer_class = CreateOfferSerializer
+    serializer_class = OfferSerializer
 
     def create(self, request, *args, **kwargs):
         request.data['user'] = request.user.id
@@ -57,16 +67,16 @@ class OrderDetailView(APIView):
         if not order.exists():
             return Response({'Not found': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
         order = order[0]
+        images = Image.objects.filter(order=order)
         offers = Offer.objects.filter(order=order)
-        order_serializer = OrderSerializer(order)
-        order = order_serializer.data
-        order['image'] = [{'src': order['image']}]
+        order = OrderImageSerializer({'images': images, 'info': order})
+        order = order.data
         if offers.exists() and not request.user.is_staff:
-            offers_serializer = OfferListSerializer(offers, many=True)
+            offers_serializer = OfferSerializer(offers, many=True)
             offers = offers_serializer.data
             return Response({
                 'order': order,
-                'offers': offers,
+                'offers': offers
             }, status=status.HTTP_200_OK)
         return Response({'order': order}, status=status.HTTP_200_OK)
 

@@ -14,14 +14,18 @@ class Category(models.Model):
 class Order(models.Model):
     title = models.CharField(max_length=256)
     description = models.TextField(max_length=256)
-    image = models.ImageField(upload_to=f'{image_root}orders/')
-    thumbnail = ImageSpecField(source='image', processors=[ResizeToFill(100, 100)],
-                               format='JPEG', options={'quality': 60})
     created_at = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     closed = models.BooleanField(default=False)
     closed_at = models.DateTimeField(null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class Image(models.Model):
+    src = models.ImageField(upload_to=f'{image_root}orders/')
+    thumbnail = ImageSpecField(source='original', processors=[ResizeToFill(100, 100)],
+                               format='JPEG', options={'quality': 60})
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
 
 class Offer(models.Model):

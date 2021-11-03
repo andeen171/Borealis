@@ -56,8 +56,8 @@ function MakeOfferButton() {
 
 function Header() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const LeftButton = isAuthenticated ? SignInButton : ProfileButton;
-  const RightButton = isAuthenticated ? SignUpButton : CreateOrderButton;
+  const LeftButton = isAuthenticated ? ProfileButton : SignInButton;
+  const RightButton = isAuthenticated ? CreateOrderButton : SignUpButton;
 
   return (
     <React.Fragment>

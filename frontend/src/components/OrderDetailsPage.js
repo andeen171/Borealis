@@ -1,88 +1,121 @@
 import React, { useEffect } from "react";
 import Header from "./layout/Header";
-import Carousel from "react-multi-carousel";
-import { Image } from "semantic-ui-react";
-import { useState } from "react";
-import LightBox from "./layout/Modal.js";
-import Box from "@material-ui/core/Box";
 import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actionCreators } from "../actionCreators";
-import { Typography } from "@material-ui/core";
-
-const responsive = {
-  desktop: {
-    breakpoint: { max: 3000, min: 1024 },
-    items: 3,
-    paritialVisibilityGutter: 60,
-  },
-  tablet: {
-    breakpoint: { max: 1024, min: 464 },
-    items: 2,
-    paritialVisibilityGutter: 50,
-  },
-  mobile: {
-    breakpoint: { max: 464, min: 0 },
-    items: 1,
-    paritialVisibilityGutter: 30,
-  },
-};
+import Copyright from "./layout/Copyright";
+import Carousel from "react-material-ui-carousel";
+import Image from "mui-image";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Grid,
+  Button,
+} from "@mui/material";
+import CardActionArea from "@mui/material/CardActionArea";
+import { Link } from "react-router-dom";
 
 export default function OrderDetailPage(props) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [currentImage, setCurrentImage] = useState(false);
-  const [arrowsShow, setArrowsShow] = useState(false);
   const order = useSelector((state) => state.orders.order);
+  const offers = useSelector((state) => state.orders.offers);
   const dispatch = useDispatch();
   const { getOrderDetails } = bindActionCreators(actionCreators, dispatch);
   const orderCode = props.match.params.orderCode;
   useEffect(() => {
     getOrderDetails(orderCode);
   }, []);
-  console.log(typeof order.image);
-  const handleModal = (idx) => {
-    setModalOpen(!modalOpen);
-    setCurrentImage(idx);
-  };
+
   return (
     <React.Fragment>
       <Header />
       <Typography variant="h4">{order.title}</Typography>
       <Typography variant="h6">{order.description}</Typography>
-      <Box
-        onMouseEnter={() => setArrowsShow(true)}
-        onMouseLeave={() => setArrowsShow(false)}
+      <div
+        style={{
+          marginTop: "50px",
+          marginLeft: "75px",
+          marginRight: "75px",
+          marginBottom: "75px",
+          color: "#494949",
+        }}
       >
-        <Carousel
-          keyBoardControl={false}
-          // focusOnSelect={true}
-          responsive={responsive}
-          // infinite
-          arrows
-          // arrows={arrowsShow}
-          // showDots={arrowsShow}
-          showDots
-          dotListClass="dotsList"
-        >
-          {order.image.map((image, idx) => {
+        <br />
+        <Card raised sx={{ borderRadius: 1 }}>
+          <Grid container sx={{ padding: "10px" }}>
+            <Grid item xs={8}>
+              <CardContent sx={{ flex: 1 }}>
+                <Typography variant="h3" color="primary">
+                  {order.info.title}
+                </Typography>
+                <br />
+                <Typography variant="h5">{order.info.description}</Typography>
+
+                <Button
+                  size="large"
+                  variant="outlined"
+                  color="success"
+                  sx={{ position: "absolute", bottom: "0" }}
+                >
+                  Make an offer
+                </Button>
+              </CardContent>
+            </Grid>
+            <Grid item align="center" xs={4}>
+              <Carousel>
+                {order.images.map((image, i) => {
+                  return (
+                    <CardMedia
+                      className="Media"
+                      key={i}
+                      sx={{
+                        width: "100%",
+                        maxHeight: "100%",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Image src={image.src} showLoading={true} fit="fill" />
+                    </CardMedia>
+                  );
+                })}
+              </Carousel>
+            </Grid>
+          </Grid>
+        </Card>
+        <Grid container spacing={5} sx={{ mt: 3 }}>
+          {offers.map((offer, i) => {
             return (
-              <Image
-                key={image}
-                draggable={false}
-                src={image.src}
-                onClick={() => handleModal(idx)}
-                className={idx === 0 ? "first-item" : "image-items"}
-              />
+              <Grid item xs={12} md={6} key={i}>
+                <CardActionArea component={Link} to={"/"}>
+                  <Card sx={{ display: "flex" }}>
+                    <CardContent sx={{ flex: 1 }}>
+                      <Typography component="h2" variant="h5">
+                        {offer.problem}
+                      </Typography>
+                      <Typography variant="subtitle1" color="text.secondary">
+                        {offer.sent_at}
+                      </Typography>
+                      <Typography variant="subtitle1" color="secondary">
+                        {offer.value_estimate}
+                      </Typography>
+                      <Typography variant="subtitle1" color="text.secondary">
+                        {offer.need_replacement
+                          ? "Replacements: " + offer.replacements
+                          : ""}
+                      </Typography>
+                      <Typography variant="subtitle1" paragraph>
+                        {offer.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </CardActionArea>
+              </Grid>
             );
           })}
-        </Carousel>
-        <LightBox
-          images={order.image}
-          handleModal={handleModal}
-          currentImage={currentImage}
-          modalOpen={modalOpen}
-        />
-      </Box>
+        </Grid>
+      </div>
+      <Copyright />
     </React.Fragment>
   );
 }
