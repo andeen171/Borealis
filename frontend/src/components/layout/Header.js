@@ -2,67 +2,14 @@ import React from "react";
 import { Button, IconButton, Toolbar, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-
-function SignInButton() {
-  return (
-    <Button variant="outlined" size="small" to="/login" component={Link}>
-      Sign in
-    </Button>
-  );
-}
-
-function SignUpButton() {
-  return (
-    <Button variant="outlined" size="small" to="/register" component={Link}>
-      Sign up
-    </Button>
-  );
-}
-
-function ProfileButton() {
-  return (
-    <Button variant="outlined" size="small" to="/profile" component={Link}>
-      Profile
-    </Button>
-  );
-}
-
-function CreateOrderButton() {
-  return (
-    <Button
-      variant="outlined"
-      size="small"
-      to="/orders/create"
-      component={Link}
-    >
-      Create Order
-    </Button>
-  );
-}
-
-function MakeOfferButton() {
-  return (
-    <Button
-      variant="outlined"
-      size="small"
-      to="/offers/create"
-      component={Link}
-    >
-      Make an Offer
-    </Button>
-  );
-}
 
 function Header() {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const LeftButton = isAuthenticated ? ProfileButton : SignInButton;
-  const RightButton = isAuthenticated ? CreateOrderButton : SignUpButton;
-
   return (
     <React.Fragment>
       <Toolbar sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <LeftButton />
+        <Button variant="outlined" size="small" to="/login" component={Link}>
+          Sign in
+        </Button>
         <Typography
           component="h2"
           variant="h5"
@@ -78,7 +25,9 @@ function Header() {
         <IconButton>
           <SearchIcon />
         </IconButton>
-        <RightButton />
+        <Button variant="outlined" size="small" to="/register" component={Link}>
+          Sign up
+        </Button>
       </Toolbar>
     </React.Fragment>
   );

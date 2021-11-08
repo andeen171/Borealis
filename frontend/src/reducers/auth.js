@@ -11,9 +11,14 @@ import {
 
 const initialState = {
   token: localStorage.getItem("token"),
-  isAuthenticated: localStorage.getItem("isAuthenticated"),
+  isAuthenticated: false,
   isLoading: false,
-  user: null,
+  user: {
+    id: 0,
+    username: "",
+    email: "",
+    is_staff: false,
+  },
 };
 
 const reducer = (state = initialState, action) => {
@@ -24,7 +29,6 @@ const reducer = (state = initialState, action) => {
         isLoading: true,
       };
     case USER_LOADED:
-      localStorage.setItem("isAuthenticated", "true");
       return {
         ...state,
         isAuthenticated: true,
@@ -33,7 +37,6 @@ const reducer = (state = initialState, action) => {
       };
     case LOGIN_SUCCESS:
     case REGISTER_SUCCESS:
-      localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("token", action.payload.token);
       return {
         ...state,

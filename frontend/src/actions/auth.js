@@ -95,12 +95,16 @@ export const logout = () => (dispatch, getState) => {
   axios
     .post("/api/auth/logout/", null, tokenConfig(getState))
     .then((res) => {
-      dispatch({ type: "CLEAR_LEADS" });
       dispatch({
         type: LOGOUT_SUCCESS,
       });
     })
     .catch((err) => {
+      if (err.response.status === 401) {
+        dispatch({
+          type: AUTH_ERROR,
+        });
+      }
       dispatch(returnErrors(err.response.data, err.response.status));
     });
 };

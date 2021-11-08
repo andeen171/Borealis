@@ -23,7 +23,7 @@ class Order(models.Model):
 
 class Image(models.Model):
     src = models.ImageField(upload_to=f'{image_root}orders/')
-    thumbnail = ImageSpecField(source='original', processors=[ResizeToFill(100, 100)],
+    thumbnail = ImageSpecField(source='src', processors=[ResizeToFill(100, 100)],
                                format='JPEG', options={'quality': 60})
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
 

@@ -5,5 +5,7 @@ urlpatterns = [
     path('', index),
     path('login/', index),
     path('register/', index),
-    path('order/<int:orderCode>/', index)
+    path('order/<int:orderCode>/', index),
+    path('orders/create/', index),
+    path('offers/create/', index),
 ]

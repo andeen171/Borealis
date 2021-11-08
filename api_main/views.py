@@ -29,11 +29,14 @@ class CreateOrderView(APIView):
         serializer = OrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
+        image_objs = []
         images = request.FILES.getlist('images')
         for image in images:
-            image = Image(original=image, order=order)
+            image = Image(src=image, order=order)
             image.save()
-        return Response({'Success': 'Order created successfully'}, status=status.HTTP_200_OK)
+            image_objs.append(image)
+        order_image = OrderImageSerializer({'info': order, 'images': image_objs})
+        return Response(order_image.data, status=status.HTTP_200_OK)
 
 
 class CreateCategoryView(generics.CreateAPIView):

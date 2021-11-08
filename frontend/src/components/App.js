@@ -4,6 +4,7 @@ import LoginPage from "./loginPage";
 import RegisterPage from "./RegisterPage";
 import HomePage from "./HomePage";
 import OrderDetailPage from "./OrderDetailsPage";
+import CreateOrderPage from "./CreateOrderPage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             return <OrderDetailPage {...props} />;
           }}
         />
+        <Route exact path="/orders/create" component={CreateOrderPage} />
       </Switch>
     </Router>
   );
