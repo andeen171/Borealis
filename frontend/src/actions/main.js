@@ -4,8 +4,7 @@ import { createMessage, returnErrors } from "./messages";
 import {
   GET_ORDERS,
   DELETE_ORDER,
-  CREATE_ORDER,
-  EDIT_ORDER,
+  ACCEPT_OFFER,
   GET_ORDER_DETAILS,
   AUTH_ERROR,
   UPLOADING_FILES,
@@ -59,6 +58,30 @@ export const getOrderDetails = (orderCode) => (dispatch, getState) => {
         type: GET_ORDER_DETAILS,
         payload: res.data,
       });
+    })
+    .catch((err) => {
+      if (err.response.status === 401) {
+        dispatch({
+          type: AUTH_ERROR,
+        });
+      }
+      dispatch(returnErrors(err.response.data, err.response.status));
+    });
+};
+
+export const acceptOffer = (info, history) => (dispatch, getState) => {
+  let config = tokenConfig(dispatch, getState);
+  config.headers["Content-Type"] = "application/json";
+  axios
+    .post("/api/offer/accept/", info, config)
+    .then((res) => {
+      dispatch(
+        {
+          type: ACCEPT_OFFER,
+          payload: res.data,
+        },
+        history.push(`/contract/${res.data.id}`)
+      );
     })
     .catch((err) => {
       if (err.response.status === 401) {

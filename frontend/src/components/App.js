@@ -5,6 +5,7 @@ import RegisterPage from "./RegisterPage";
 import HomePage from "./HomePage";
 import OrderDetailPage from "./OrderDetailsPage";
 import CreateOrderPage from "./CreateOrderPage";
+import ContractDetailsPage from "./contractDetailsPage";
 
 function App() {
   return (
@@ -13,13 +14,19 @@ function App() {
         <Route exact path="/" component={HomePage} />
         <Route exact path="/login" component={LoginPage} />
         <Route exact path="/register" component={RegisterPage} />
+        <Route exact path="/orders/create" component={CreateOrderPage} />
         <Route
           path="/order/:orderCode"
           render={(props) => {
             return <OrderDetailPage {...props} />;
           }}
         />
-        <Route exact path="/orders/create" component={CreateOrderPage} />
+        <Route
+          path="/contract/:contractCode"
+          render={(props) => {
+            return <ContractDetailsPage {...props} />;
+          }}
+        />
       </Switch>
     </Router>
   );

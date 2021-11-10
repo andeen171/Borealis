@@ -8,4 +8,5 @@ urlpatterns = [
     path('order/<int:orderCode>/', index),
     path('orders/create/', index),
     path('offers/create/', index),
+    path('contract/<int:contractCode>/', index),
 ]

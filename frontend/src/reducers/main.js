@@ -5,6 +5,7 @@ import {
   EDIT_ORDER,
   GET_ORDER_DETAILS,
   UPLOADING_FILES,
+  ACCEPT_OFFER,
 } from "../actions/types";
 
 const initialState = {
@@ -24,6 +25,7 @@ const initialState = {
   },
   offers: [],
   progress: 0,
+  contracts: [],
 };
 
 const reducer = (state = initialState, action) => {
@@ -53,6 +55,11 @@ const reducer = (state = initialState, action) => {
         ...state,
         order: action.payload.order,
         offers: action.payload.offers ? action.payload.offers : [],
+      };
+    case ACCEPT_OFFER:
+      return {
+        ...state,
+        contracts: [action.payload, ...state.contracts],
       };
     default:
       return state;

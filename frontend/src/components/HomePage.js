@@ -37,8 +37,8 @@ export default function HomePage() {
         {isAuthenticated ? <UserHeader /> : <Header />}
         <main>
           <Grid container spacing={5} sx={{ mt: 3 }}>
-            {orders.map((post) => (
-              <Grid item xs={12} md={6}>
+            {orders.map((post, i) => (
+              <Grid key={i} item xs={12} md={6}>
                 {isAuthenticated ? (
                   <CardActionArea
                     component={Link}

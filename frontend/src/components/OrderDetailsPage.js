@@ -16,10 +16,12 @@ import {
   Grid,
   Button,
   Container,
+  Box,
+  Modal,
 } from "@mui/material";
 import CardActionArea from "@mui/material/CardActionArea";
-import { Link } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
+import { useHistory } from "react-router-dom";
 
 const theme = createTheme();
 
@@ -28,8 +30,12 @@ export default function OrderDetailPage(props) {
   const offers = useSelector((state) => state.main.offers);
   const is_staff = useSelector((state) => state.auth.user.is_staff);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const history = useHistory();
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
   const dispatch = useDispatch();
-  const { getOrderDetails, loadUser } = bindActionCreators(
+  const { getOrderDetails, loadUser, acceptOffer } = bindActionCreators(
     actionCreators,
     dispatch
   );
@@ -100,7 +106,7 @@ export default function OrderDetailPage(props) {
             {offers.map((offer, i) => {
               return (
                 <Grid item xs={12} md={6} key={i}>
-                  <CardActionArea component={Link} to={"/"}>
+                  <CardActionArea onClick={handleOpen}>
                     <Card sx={{ display: "flex" }}>
                       <CardContent sx={{ flex: 1 }}>
                         <Typography component="h2" variant="h5">
@@ -123,6 +129,62 @@ export default function OrderDetailPage(props) {
                       </CardContent>
                     </Card>
                   </CardActionArea>
+                  <Modal
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                  >
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: 400,
+                        bgcolor: "background.paper",
+                        boxShadow: 24,
+                        p: 4,
+                      }}
+                    >
+                      <Typography component="h2" variant="h5">
+                        {offer.problem}
+                      </Typography>
+                      <Typography variant="subtitle1" color="text.secondary">
+                        {offer.sent_at}
+                      </Typography>
+                      <Typography variant="subtitle1" color="secondary">
+                        {offer.value_estimate}
+                      </Typography>
+                      <Typography variant="subtitle1" color="text.secondary">
+                        {offer.need_replacement
+                          ? "Replacements: " + offer.replacements
+                          : ""}
+                      </Typography>
+                      <Typography variant="subtitle1" paragraph>
+                        {offer.description}
+                      </Typography>
+                      <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          to="/login"
+                          color="success"
+                          onClick={() =>
+                            acceptOffer(
+                              {
+                                order: parseInt(orderCode),
+                                offer: offer.id,
+                              },
+                              history
+                            )
+                          }
+                        >
+                          Accept offer
+                        </Button>
+                      </Typography>
+                    </Box>
+                  </Modal>
                 </Grid>
               );
             })}
