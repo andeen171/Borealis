@@ -1,7 +1,10 @@
 from .models import Profile, Role
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.contrib.auth import authenticate
+
+
+User = settings.AUTH_USER_MODEL
 
 
 class UserSerializer(serializers.ModelSerializer):

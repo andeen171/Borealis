@@ -68,14 +68,12 @@ export default function ContractDetailsPage(props) {
         {isAuthenticated ? <UserHeader /> : <Header />}
         <div
           style={{
-            marginTop: "50px",
             marginLeft: "75px",
             marginRight: "75px",
             marginBottom: "75px",
             color: "#494949",
           }}
         >
-          <br />
           <Container component="main" maxWidth="sm" sx={{ mb: 4 }}>
             <Paper
               variant="outlined"

@@ -1,9 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
 
+from api_auth.models import Address
+
 image_root = 'static/images/'
+User = settings.AUTH_USER_MODEL
 
 
 class Category(models.Model):
@@ -50,3 +53,41 @@ class Contract(models.Model):
     stage = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(null=True)
+
+
+class DeliveryStage(models.Model):
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
+    address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)
+    sending = models.BooleanField()
+    description = models.CharField(max_length=512)
+    started_at = models.DateTimeField(auto_now_add=True)
+    ending_prediction = models.DateField(null=True)
+    finished = models.BooleanField(default=False)
+    finished_at = models.DateTimeField(null=True)
+
+
+class DiagnosticStage(models.Model):
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
+    problem = models.CharField(max_length=256)
+    description = models.CharField(max_length=512)
+    started_at = models.DateTimeField(auto_now_add=True)
+    ending_prediction = models.DateField(null=True)
+    finished = models.BooleanField(default=False)
+    finished_at = models.DateTimeField(null=True)
+
+
+class FixingStage(models.Model):
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
+    fixed_parts = models.CharField(max_length=256, null=True)
+    description = models.CharField(max_length=512)
+    started_at = models.DateTimeField(auto_now_add=True)
+    ending_prediction = models.DateField(null=True)
+    finished = models.BooleanField(default=False)
+    finished_at = models.DateTimeField(null=True)
+
+
+class Payment(models.Model):
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payer')
+    technician = models.ForeignKey(User, on_delete=models.CASCADE, related_name='receiver')
+    value = models.DecimalField(max_digits=6, decimal_places=2)

@@ -1,11 +1,13 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from django.contrib.auth.models import User
+from django.conf import settings
 from knox.models import AuthToken
 from rest_framework.views import APIView
 from .models import Profile, Role
 from .serializers import (UserSerializer, RegisterSerializer, LoginSerializer,
                           ProfileSerializer, ListTechniciansSerializer)
+
+User = settings.AUTH_USER_MODEL
 
 
 class RegisterAPI(generics.GenericAPIView):
