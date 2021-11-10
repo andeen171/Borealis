@@ -5,19 +5,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actionCreators } from "../actionCreators";
 import Copyright from "./layout/Copyright";
-import Carousel from "react-material-ui-carousel";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import Image from "mui-image";
 import {
-  Card,
-  CardContent,
-  CardMedia,
   Typography,
-  Grid,
   Button,
   Container,
   Box,
-  Modal,
   Paper,
   Stepper,
   Step,
