@@ -1,7 +1,7 @@
 from django.urls import path
 from api_auth.views import ListTechnicians
 from .views import (CreateOrderView, CreateCategoryView, OrdersApiView, CreateOfferView,
-                    OrderDetailView, OfferDetailView, CreateContractView)
+                    OrderDetailView, OfferDetailView, CreateContractView, ContractDetailsView)
 
 
 urlpatterns = [
@@ -11,6 +11,7 @@ urlpatterns = [
     path('offer/create/', CreateOfferView.as_view()),
     path('order/<int:order_id>/', OrderDetailView.as_view()),
     path('offer/<int:offer_id>/', OfferDetailView.as_view()),
+    path('contract/<int:contract_id>/', ContractDetailsView.as_view()),
     path('technicians/', ListTechnicians.as_view()),
     path('offer/accept/', CreateContractView.as_view())
 ]

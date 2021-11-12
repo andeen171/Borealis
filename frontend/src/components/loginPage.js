@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Link as RouterLink, Redirect } from "react-router-dom";
+import { Link as RouterLink, useHistory } from "react-router-dom";
 import Copyright from "./layout/Copyright";
 import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -24,17 +24,13 @@ import { actionCreators } from "../actionCreators";
 const theme = createTheme();
 export default function LoginPage() {
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const isLoading = useSelector((state) => state.auth.isLoading);
+  const history = useHistory();
   const { login } = bindActionCreators(actionCreators, dispatch);
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    login(data.get("email"), data.get("password"));
+    login(data.get("email"), data.get("password"), history);
   };
-  if (isAuthenticated) {
-    return <Redirect to="/" />;
-  }
 
   return (
     <ThemeProvider theme={theme}>

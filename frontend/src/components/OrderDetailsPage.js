@@ -68,7 +68,11 @@ export default function OrderDetailPage(props) {
                     {order.info.title}
                   </Typography>
                   <br />
-                  <Typography variant="h5">{order.info.description}</Typography>
+                  <Grid item xs={10}>
+                    <Typography variant="h5">
+                      {order.info.description}
+                    </Typography>
+                  </Grid>
                   {is_staff ? (
                     <Button
                       size="large"

@@ -1,20 +1,19 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from knox.models import AuthToken
 from rest_framework.views import APIView
 from .models import Profile, Role
 from .serializers import (UserSerializer, RegisterSerializer, LoginSerializer,
                           ProfileSerializer, ListTechniciansSerializer)
 
-User = settings.AUTH_USER_MODEL
+User = get_user_model()
 
 
 class RegisterAPI(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        print(request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -29,7 +28,8 @@ class LoginAPI(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        print(request.data)
+        print(serializer.is_valid(raise_exception=True))
         user = serializer.validated_data
         _, token = AuthToken.objects.create(user)
         return Response({

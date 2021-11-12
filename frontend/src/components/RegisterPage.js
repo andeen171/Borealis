@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Link as RouterLink, Redirect } from "react-router-dom";
+import { Link as RouterLink, useHistory } from "react-router-dom";
 import { register } from "../actions";
 import Copyright from "./layout/Copyright";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,6 +22,7 @@ import { actionCreators } from "../actionCreators";
 const theme = createTheme();
 
 export default function RegisterPage() {
+  const history = useHistory();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const { register } = bindActionCreators(actionCreators, dispatch);
@@ -33,12 +34,9 @@ export default function RegisterPage() {
       data.get("password"),
       data.get("fname"),
       data.get("lname"),
-      false
+      history
     );
   };
-  if (user) {
-    return <Redirect to="/login" />;
-  }
 
   return (
     <ThemeProvider theme={theme}>

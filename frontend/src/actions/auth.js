@@ -34,7 +34,7 @@ export const loadUser = () => (dispatch, getState) => {
 };
 
 // LOGIN USER
-export const login = (username, password) => (dispatch) => {
+export const login = (email, password, history) => (dispatch) => {
   // Headers
   const config = {
     headers: {
@@ -43,15 +43,18 @@ export const login = (username, password) => (dispatch) => {
   };
 
   // Request Body
-  const body = JSON.stringify({ username, password });
+  const body = JSON.stringify({ email, password });
 
   axios
     .post("/api/auth/login/", body, config)
     .then((res) => {
-      dispatch({
-        type: LOGIN_SUCCESS,
-        payload: res.data,
-      });
+      dispatch(
+        {
+          type: LOGIN_SUCCESS,
+          payload: res.data,
+        },
+        history.push("/")
+      );
     })
     .catch((err) => {
       dispatch(returnErrors(err.response.data, err.response.status));
@@ -63,7 +66,8 @@ export const login = (username, password) => (dispatch) => {
 
 // REGISTER USER
 export const register =
-  (email, password, fname, lname, is_staff) => (dispatch) => {
+  (email, password, fname, lname, history) => (dispatch) => {
+    let full_name = `${fname} ${lname}`;
     // Headers
     const config = {
       headers: {
@@ -72,15 +76,18 @@ export const register =
     };
 
     // Request Body
-    const body = JSON.stringify({ email, password, fname, lname, is_staff });
+    const body = JSON.stringify({ email, full_name, password });
 
     axios
       .post("/api/auth/register/", body, config)
       .then((res) => {
-        dispatch({
-          type: REGISTER_SUCCESS,
-          payload: res.data,
-        });
+        dispatch(
+          {
+            type: REGISTER_SUCCESS,
+            payload: res.data,
+          },
+          history.push("/login")
+        );
       })
       .catch((err) => {
         dispatch(returnErrors(err.response.data, err.response.status));

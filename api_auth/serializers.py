@@ -1,32 +1,32 @@
 from .models import Profile, Role
 from rest_framework import serializers
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 
 
-User = settings.AUTH_USER_MODEL
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'is_staff')
+        fields = ('id', 'email', 'full_name', 'is_staff')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'is_staff')
+        fields = ('email', 'password', 'full_name')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create_user(validated_data['username'], validated_data['email'],
-                                        validated_data['password'], is_staff=validated_data['is_staff'])
+        user = User.objects.create_user(validated_data['email'], validated_data['full_name'],
+                                        validated_data['password'])
         return user
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    email = serializers.CharField()
     password = serializers.CharField()
 
     def validate(self, data):
