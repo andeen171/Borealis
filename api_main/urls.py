@@ -1,17 +1,19 @@
 from django.urls import path
 from api_auth.views import ListTechnicians
-from .views import (CreateOrderView, CreateCategoryView, OrdersApiView, CreateOfferView,
-                    OrderDetailView, OfferDetailView, CreateContractView, ContractDetailsView)
+from .views import (CreateOrderAPI, CreateCategoryAPI, ListOrdersAPI, CreateOfferAPI,
+                    OrderDetailAPI, OfferDetailAPI, CreateContractAPI, ContractDetailsAPI,
+                    CreateStageInfoAPI)
 
 
 urlpatterns = [
-    path('orders/', OrdersApiView.as_view()),
-    path('order/create/', CreateOrderView.as_view()),
-    path('category/create/', CreateCategoryView.as_view()),
-    path('offer/create/', CreateOfferView.as_view()),
-    path('order/<int:order_id>/', OrderDetailView.as_view()),
-    path('offer/<int:offer_id>/', OfferDetailView.as_view()),
-    path('contract/<int:contract_id>/', ContractDetailsView.as_view()),
+    path('orders/', ListOrdersAPI.as_view()),
+    path('order/create/', CreateOrderAPI.as_view()),
+    path('category/create/', CreateCategoryAPI.as_view()),
+    path('offer/create/', CreateOfferAPI.as_view()),
+    path('order/<int:order_id>/', OrderDetailAPI.as_view()),
+    path('offer/<int:offer_id>/', OfferDetailAPI.as_view()),
+    path('contract/<int:contract_id>/', ContractDetailsAPI.as_view()),
     path('technicians/', ListTechnicians.as_view()),
-    path('offer/accept/', CreateContractView.as_view())
+    path('offer/accept/', CreateContractAPI.as_view()),
+    path('contract/stage/<int:contract_id>/', CreateStageInfoAPI.as_view()),
 ]

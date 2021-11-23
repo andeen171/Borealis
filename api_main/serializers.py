@@ -61,6 +61,19 @@ class DeliveryStageSerializer(serializers.ModelSerializer):
         return stage
 
 
+class CreateContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contract
+        fields = "__all__"
+
+    def create(self, validated_data):
+        contract = Contract(order=validated_data["order"], offer=validated_data['offer'],
+                            client=validated_data['client'], technician=validated_data['technician'],
+                            value=validated_data['value'])
+        contract.save()
+        return contract
+
+
 class DiagnosticStageSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiagnosticStage
