@@ -10,7 +10,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Redirect } from "react-router-dom";
+import { Redirect, useHistory } from "react-router-dom";
 import Copyright from "./layout/Copyright";
 import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -19,6 +19,7 @@ import { actionCreators } from "../actionCreators";
 const theme = createTheme();
 
 export default function RegisterPage() {
+  const history = useHistory();
   const dispatch = useDispatch();
   const is_staff = useSelector((state) => state.auth.user.is_staff);
   const progress = useSelector((state) => state.main.progress);
@@ -32,9 +33,9 @@ export default function RegisterPage() {
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    createOrder(data);
+    createOrder(data, history);
   };
-  if (is_staff || progress === 100) {
+  if (is_staff) {
     return <Redirect to="/" />;
   }
 

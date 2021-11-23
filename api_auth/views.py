@@ -4,17 +4,20 @@ from django.contrib.auth import get_user_model
 from knox.models import AuthToken
 from rest_framework.views import APIView
 from .models import Profile, Role
-from .serializers import (UserSerializer, RegisterSerializer, LoginSerializer,
+from .serializers import (UserSerializer, ClientRegisterSerializer, TechnicianRegisterSerializer, LoginSerializer,
                           ProfileSerializer, ListTechniciansSerializer)
 
 User = get_user_model()
 
 
 class RegisterAPI(generics.GenericAPIView):
-    serializer_class = RegisterSerializer
-
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        is_staff = request.data.get('is_staff')
+        if is_staff:
+            serializer = TechnicianRegisterSerializer
+        else:
+            serializer = ClientRegisterSerializer
+        serializer = serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({
@@ -28,8 +31,7 @@ class LoginAPI(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        print(request.data)
-        print(serializer.is_valid(raise_exception=True))
+        serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
         _, token = AuthToken.objects.create(user)
         return Response({

@@ -42,12 +42,12 @@ export const deleteOrder = (id) => (dispatch, getState) => {
     .catch((err) => console.log(err));
 };
 
-export const createOrder = (order) => (dispatch, getState) => {
-  return axios.post(
-    "/api/order/create/",
-    order,
-    tokenConfig(dispatch, getState)
-  );
+export const createOrder = (order, history) => (dispatch, getState) => {
+  axios
+    .post("/api/order/create/", order, tokenConfig(dispatch, getState))
+    .then((res) => {
+      dispatch(history.push(`/order/${res.data.info.id}/`));
+    });
 };
 
 export const getOrderDetails = (orderCode) => (dispatch, getState) => {

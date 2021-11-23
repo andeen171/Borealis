@@ -5,10 +5,10 @@ from .models import Order, Category, Offer, Contract, Image, DeliveryStage, Diag
 from Borealis.permissions import IsClient, IsTechnician
 from .serializers import (OrderSerializer, CategorySerializer, OfferSerializer, ContractSerializer,
                           OrderImageSerializer, DeliveryStageSerializer, DiagnosticStageSerializer,
-                          FixingStageSerializer)
+                          FixingStageSerializer, CreateContractSerializer)
 
 
-class OrdersApiView(APIView):
+class ListOrdersAPI(APIView):
     def get(self, request, *args, **kwargs):
         orders = Order.objects.all()
         results = []
@@ -20,7 +20,7 @@ class OrdersApiView(APIView):
         return Response(results, status=status.HTTP_200_OK)
 
 
-class CreateOrderView(APIView):
+class CreateOrderAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsClient,
@@ -41,7 +41,7 @@ class CreateOrderView(APIView):
         return Response(order_image.data, status=status.HTTP_200_OK)
 
 
-class CreateCategoryView(generics.CreateAPIView):
+class CreateCategoryAPI(generics.CreateAPIView):
     permission_classes = [
         permissions.IsAuthenticated,
     ]
@@ -49,7 +49,7 @@ class CreateCategoryView(generics.CreateAPIView):
     serializer_class = CategorySerializer
 
 
-class CreateOfferView(generics.CreateAPIView):
+class CreateOfferAPI(generics.CreateAPIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsTechnician,
@@ -59,10 +59,10 @@ class CreateOfferView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         request.data['user'] = request.user.id
-        return super(CreateOfferView, self).create(request, *args, **kwargs)
+        return super(CreateOfferAPI, self).create(request, *args, **kwargs)
 
 
-class OrderDetailView(APIView):
+class OrderDetailAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
     ]
@@ -86,7 +86,7 @@ class OrderDetailView(APIView):
         return Response({'order': order}, status=status.HTTP_200_OK)
 
 
-class OfferDetailView(APIView):
+class OfferDetailAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
     ]
@@ -108,13 +108,13 @@ class OfferDetailView(APIView):
         return Response({'PermissionDenied': 'Permission Denied'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class CreateContractView(generics.CreateAPIView):
+class CreateContractAPI(generics.CreateAPIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsClient,
     ]
     queryset = Contract.objects.all()
-    serializer_class = ContractSerializer
+    serializer_class = CreateContractSerializer
 
     def create(self, request, *args, **kwargs):
         offer = Offer.objects.get(id=request.data['offer'])
@@ -130,10 +130,10 @@ class CreateContractView(generics.CreateAPIView):
         request.data['order'] = offer.order.id
         request.data['value'] = offer.value_estimate
         request.data['technician'] = offer.user.id
-        return super(CreateContractView, self).create(request, *args, **kwargs)
+        return super(CreateContractAPI, self).create(request, *args, **kwargs)
 
 
-class ContractDetailsView(APIView):
+class ContractDetailsAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
     ]
@@ -143,15 +143,15 @@ class ContractDetailsView(APIView):
         if not contract.exists():
             return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
         contract = contract[0]
-        if request.user != contract.client or request.user != contract.technician:
-            return Response({'Access denied': 'Only the client and technician have access to their contract'},
-                            status=status.HTTP_401_UNAUTHORIZED)
-        serializer = ContractSerializer(contract)
-        contract = serializer.data
-        return Response(contract, status=status.HTTP_200_OK)
+        if request.user == contract.client or request.user == contract.technician:
+            serializer = ContractSerializer(contract)
+            contract = serializer.data
+            return Response(contract, status=status.HTTP_200_OK)
+        return Response({'Access denied': 'Only the client and technician have access to their contract'},
+                        status=status.HTTP_401_UNAUTHORIZED)
 
 
-class AdvanceContractStage(APIView):
+class AdvanceStageAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsTechnician
@@ -185,7 +185,7 @@ class AdvanceContractStage(APIView):
         return Response({'Success': f'Contract advanced to {contract.stage} stage'}, status=status.HTTP_200_OK)
 
 
-class PreviousContractStage(APIView):
+class PreviousStageAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsTechnician
@@ -206,23 +206,65 @@ class PreviousContractStage(APIView):
         return Response({'Success': f'Contract returned to {contract.stage} stage'}, status=status.HTTP_200_OK)
 
 
-class FirstStageContractInfo(APIView):
+class CreateStageInfoAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsTechnician
     ]
 
-    def post(self, request, *args, **kwargs):
-        contract = Contract.objects.filter(id=request.data.get('contract'))
+    def post(self, request, contract_id, *args, **kwargs):
+        contract = Contract.objects.filter(id=contract_id)
         if not contract.exists():
             return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
         contract = contract[0]
         if request.user != contract.technician:
             return Response({'Permission Denied': 'Only the technician working on the order can modify the contract'},
                             status=status.HTTP_401_UNAUTHORIZED)
-        request.data.pop('contract')
-        serializer = DeliveryStageSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        stage = serializer.save()
-        return Response({'Success': 'First Stage info saved in the contract',
-                         'stage': DeliveryStageSerializer(stage).data}, status=status.HTTP_201_CREATED)
+        stage = request.data.get('stage')
+        request.data.pop('stage')
+        if stage == 1:
+            if contract.first_stage:
+                first_stage = DeliveryStage.objects.get(id=contract.first_stage.id)
+                for key, value in request.data.items():
+                    first_stage[key] = value
+                    first_stage.save()
+                stage = DeliveryStageSerializer(contract.first_stage)
+                return Response({'Success': 'First Stage info edited successfully', 'stage': stage},
+                                status=status.HTTP_200_OK)
+            serializer = DeliveryStageSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            stage = serializer.save()
+            contract.first_stage = stage
+            contract.save()
+            return Response({'Success': 'First Stage info saved in the contract',
+                             'stage': DeliveryStageSerializer(stage).data}, status=status.HTTP_201_CREATED)
+        if stage == 2:
+            if contract.second_stage:
+                for key, value in request.data:
+                    contract.second_stage[key] = value
+                    contract.second_stage.save()
+                stage = DiagnosticStageSerializer(contract.second_stage).data
+                return Response({'Success': 'Second Stage info edited successfully', 'stage': stage},
+                                status=status.HTTP_200_OK)
+            serializer = DiagnosticStageSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            stage = serializer.save()
+            contract.second_stage = stage
+            contract.save()
+            return Response({'Success': 'Second Stage info saved in the contract',
+                             'stage': DiagnosticStageSerializer(stage).data}, status=status.HTTP_201_CREATED)
+        if stage == 3:
+            if contract.third_stage:
+                for key, value in request.data:
+                    contract.third_stage[key] = value
+                    contract.third_stage.save()
+                stage = FixingStageSerializer(contract.third_stage).data
+                return Response({'Success': 'Third Stage info edited successfully', 'stage': stage},
+                                status=status.HTTP_200_OK)
+            serializer = FixingStageSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            stage = serializer.save()
+            contract.third_stage = stage
+            contract.save()
+            return Response({'Success': 'Third Stage info saved in the contract',
+                             'stage': FixingStageSerializer(stage).data}, status=status.HTTP_201_CREATED)
