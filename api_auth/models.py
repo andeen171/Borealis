@@ -7,7 +7,7 @@ from imagekit.processors import ResizeToFill
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, full_name, password=None):
+    def create_user(self, email, full_name, cpf, password=None):
         """
         Creates and saves a User with the given email and password.
         """
@@ -15,36 +15,41 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have an email address')
         if not full_name:
             raise ValueError('Users must have a full name')
+        if not cpf:
+            raise ValueError('Users must have a CPF')
 
         user = self.model(
             email=self.normalize_email(email),
-            full_name=full_name
+            full_name=full_name,
+            cpf=cpf
         )
 
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_staffuser(self, email, full_name, password):
+    def create_staffuser(self, email, full_name, cpf, password):
         """
         Creates and saves a staff user with the given email and password.
         """
         user = self.create_user(
             email,
             full_name,
+            cpf,
             password=password,
         )
         user.staff = True
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, full_name, password):
+    def create_superuser(self, email, full_name, cpf, password):
         """
         Creates and saves a superuser with the given email and password.
         """
         user = self.create_user(
             email,
             full_name,
+            cpf,
             password=password,
         )
         user.staff = True
@@ -60,6 +65,7 @@ class User(AbstractBaseUser):
         unique=True,
     )
     full_name = models.CharField(max_length=255, blank=True, null=True)
+    cpf = models.CharField(max_length=11, blank=True, null=True, unique=True)
     is_active = models.BooleanField(default=True)
     staff = models.BooleanField(default=False)  # a admin user; non super-user
     admin = models.BooleanField(default=False)  # a superuser
@@ -68,7 +74,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['full_name']  # Email & Password are required by default.
+    REQUIRED_FIELDS = ['full_name', 'cpf']  # Email & Password are required by default.
 
     def get_full_name(self):
         # The user is identified by their email address

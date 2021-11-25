@@ -1,14 +1,13 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Order, Category, Offer, Contract, Image, DeliveryStage, DiagnosticStage, FixingStage
+from .models import Order, Offer, Contract, Image
 from Borealis.permissions import IsClient, IsTechnician
-from .serializers import (OrderSerializer, CategorySerializer, OfferSerializer, ContractSerializer,
-                          OrderImageSerializer, DeliveryStageSerializer, DiagnosticStageSerializer,
-                          FixingStageSerializer, CreateContractSerializer)
+from .serializers import (OrderSerializer, OfferSerializer,
+                          OrderImageSerializer, ContractSerializer)
 
 
-class ListOrdersAPI(APIView):
+class OrdersAPI(APIView):
     def get(self, request, *args, **kwargs):
         orders = Order.objects.all()
         results = []
@@ -19,14 +18,11 @@ class ListOrdersAPI(APIView):
                 results.append(order_image.data)
         return Response(results, status=status.HTTP_200_OK)
 
-
-class CreateOrderAPI(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsClient,
-    ]
-
     def post(self, request, *args, **kwargs):
+        self.permission_classes = [
+            permissions.IsAuthenticated,
+            IsClient,
+        ]
         request.data['user'] = request.user.id
         serializer = OrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -41,28 +37,7 @@ class CreateOrderAPI(APIView):
         return Response(order_image.data, status=status.HTTP_200_OK)
 
 
-class CreateCategoryAPI(generics.CreateAPIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-    ]
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-
-
-class CreateOfferAPI(generics.CreateAPIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsTechnician,
-    ]
-    queryset = Offer.objects.all()
-    serializer_class = OfferSerializer
-
-    def create(self, request, *args, **kwargs):
-        request.data['user'] = request.user.id
-        return super(CreateOfferAPI, self).create(request, *args, **kwargs)
-
-
-class OrderDetailAPI(APIView):
+class OrderInstanceAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
     ]
@@ -85,12 +60,50 @@ class OrderDetailAPI(APIView):
             }, status=status.HTTP_200_OK)
         return Response({'order': order}, status=status.HTTP_200_OK)
 
+    def delete(self, request, order_id, *args, **kwargs):
+        order = Order.objects.filter(id=order_id)
+        if not order.exists():
+            return Response({'Not found': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+        order = order[0]
+        if order.user != request.user:
+            return Response({'PermissionDenied': 'Permission Denied'}, status=status.HTTP_401_UNAUTHORIZED)
+        if order.closed:
+            return Response({'Bad Request': 'Order have a contract in progress'}, status=status.HTTP_400_BAD_REQUEST)
+        order.delete()
+        return Response({'Success': 'Order deleted successfully'}, status=status.HTTP_200_OK)
 
-class OfferDetailAPI(APIView):
+    def put(self, request, order_id, *args, **kwargs):
+        order = Order.objects.filter(id=order_id)
+        if not order.exists():
+            return Response({'Not found': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+        order = order[0]
+        if order.user != request.user:
+            return Response({'PermissionDenied': 'Permission Denied'}, status=status.HTTP_401_UNAUTHORIZED)
+        if order.closed:
+            return Response({'Bad Request': 'Order have a contract in progress'}, status=status.HTTP_400_BAD_REQUEST)
+        for field, value in request.data.items():
+            setattr(order, field, value)
+        order.save()
+        return Response({'Success': 'Order edited successfully'}, status=status.HTTP_200_OK)
+
+
+class OffersAPI(generics.CreateAPIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsTechnician,
+    ]
+    queryset = Offer.objects.all()
+    serializer_class = OfferSerializer
+
+    def create(self, request, *args, **kwargs):
+        request.data['user'] = request.user.id
+        return super(OffersAPI, self).create(request, *args, **kwargs)
+
+
+class OfferInstanceAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
     ]
-    serializer_class = OfferSerializer
 
     def get(self, request, offer_id, *args, **kwargs):
         offer = Offer.objects.filter(id=offer_id)
@@ -101,20 +114,46 @@ class OfferDetailAPI(APIView):
         order = offer.order
         order_owner = order.user.id
         if request.user.id == offer_owner or request.user.id == order_owner:
-            serializer = self.serializer_class(offer)
+            serializer = OfferSerializer(offer)
             return Response({
                 "Offer": serializer.data
             }, status=status.HTTP_200_OK)
         return Response({'PermissionDenied': 'Permission Denied'}, status=status.HTTP_401_UNAUTHORIZED)
 
+    def delete(self, request, offer_id, *args, **kwargs):
+        offer = Offer.objects.filter(id=offer_id)
+        if not offer.exists():
+            return Response({'Not found': 'Offer not found'}, status=status.HTTP_404_NOT_FOUND)
+        offer = offer[0]
+        if offer.user != request.user:
+            return Response({'PermissionDenied': 'Permission Denied'}, status=status.HTTP_401_UNAUTHORIZED)
+        if offer.accepted:
+            return Response({'Bad Request': 'Offer is already accepted'}, status=status.HTTP_400_BAD_REQUEST)
+        offer.delete()
+        return Response({'Success': 'Offer deleted successfully'}, status=status.HTTP_200_OK)
 
-class CreateContractAPI(generics.CreateAPIView):
+    def put(self, request, offer_id, *args, **kwargs):
+        offer = Offer.objects.filter(id=offer_id)
+        if not offer.exists():
+            return Response({'Not found': 'Offer not found'}, status=status.HTTP_404_NOT_FOUND)
+        offer = offer[0]
+        if offer.user != request.user:
+            return Response({'PermissionDenied': 'Permission Denied'}, status=status.HTTP_401_UNAUTHORIZED)
+        if offer.accepted:
+            return Response({'Bad Request': 'Offer is already accepted'}, status=status.HTTP_400_BAD_REQUEST)
+        for field, value in request.data.items():
+            setattr(offer, field, value)
+        offer.save()
+        return Response({'Success': 'Offer edited successfully'}, status=status.HTTP_200_OK)
+
+
+class ContractsAPI(generics.CreateAPIView):
     permission_classes = [
         permissions.IsAuthenticated,
         IsClient,
     ]
     queryset = Contract.objects.all()
-    serializer_class = CreateContractSerializer
+    serializer_class = ContractSerializer
 
     def create(self, request, *args, **kwargs):
         offer = Offer.objects.get(id=request.data['offer'])
@@ -126,14 +165,17 @@ class CreateContractAPI(generics.CreateAPIView):
                             status=status.HTTP_304_NOT_MODIFIED)
         offer.accepted = True
         offer.save()
+        order = offer.order
+        order.closed = True
+        order.save()
         request.data['client'] = request.user.id
         request.data['order'] = offer.order.id
         request.data['value'] = offer.value_estimate
         request.data['technician'] = offer.user.id
-        return super(CreateContractAPI, self).create(request, *args, **kwargs)
+        return super(ContractsAPI, self).create(request, *args, **kwargs)
 
 
-class ContractDetailsAPI(APIView):
+class ContractInstanceAPI(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
     ]
@@ -150,121 +192,26 @@ class ContractDetailsAPI(APIView):
         return Response({'Access denied': 'Only the client and technician have access to their contract'},
                         status=status.HTTP_401_UNAUTHORIZED)
 
-
-class AdvanceStageAPI(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsTechnician
-    ]
-
-    def post(self, request, *args, **kwargs):
-        contract = Contract.objects.filter(id=request.POST.get('contract'))
-        if not contract.exists():
-            return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
-        contract = contract[0]
-        if request.user != contract.technician:
-            return Response({'Permission Denied': 'Only the technician working on the order can modify the contract'},
-                            status=status.HTTP_401_UNAUTHORIZED)
-        if contract.stage == 3:
-            stage = FixingStage.objects.get(id=contract.third_stage)
-            stage.finished = True
-            stage.save()
-            contract.finished = True
-            contract.save()
-            return Response({'Contract Finished': 'Contract completed it last stage'}, status=status.HTTP_200_OK)
-        if contract.stage == 2:
-            stage = DiagnosticStage.objects.get(id=contract.second_stage)
-            stage.finished = True
-            stage.save()
-        elif contract.stage == 1:
-            stage = DeliveryStage.objects.get(id=contract.first_stage)
-            stage.finished = True
-            stage.save()
-        contract.stage += 1
-        contract.save()
-        return Response({'Success': f'Contract advanced to {contract.stage} stage'}, status=status.HTTP_200_OK)
-
-
-class PreviousStageAPI(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsTechnician
-    ]
-
-    def post(self, request, *args, **kwargs):
-        contract = Contract.objects.filter(id=request.POST.get('contract'))
-        if not contract.exists():
-            return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
-        contract = contract[0]
-        if request.user != contract.technician:
-            return Response({'Permission Denied': 'Only the technician working on the order can modify the contract'},
-                            status=status.HTTP_401_UNAUTHORIZED)
-        if contract.stage == 1:
-            return Response({'Bad Request': 'Contract already at initial stage'}, status=status.HTTP_400_BAD_REQUEST)
-        contract.stage -= 1
-        contract.save()
-        return Response({'Success': f'Contract returned to {contract.stage} stage'}, status=status.HTTP_200_OK)
-
-
-class CreateStageInfoAPI(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        IsTechnician
-    ]
-
-    def post(self, request, contract_id, *args, **kwargs):
+    def delete(self, request, contract_id, *args, **kwargs):
         contract = Contract.objects.filter(id=contract_id)
         if not contract.exists():
             return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
         contract = contract[0]
-        if request.user != contract.technician:
-            return Response({'Permission Denied': 'Only the technician working on the order can modify the contract'},
-                            status=status.HTTP_401_UNAUTHORIZED)
-        stage = request.data.get('stage')
-        request.data.pop('stage')
-        if stage == 1:
-            if contract.first_stage:
-                first_stage = DeliveryStage.objects.get(id=contract.first_stage.id)
-                for key, value in request.data.items():
-                    first_stage[key] = value
-                    first_stage.save()
-                stage = DeliveryStageSerializer(contract.first_stage)
-                return Response({'Success': 'First Stage info edited successfully', 'stage': stage},
-                                status=status.HTTP_200_OK)
-            serializer = DeliveryStageSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            stage = serializer.save()
-            contract.first_stage = stage
+        if request.user == contract.client or request.user == contract.technician:
+            contract.delete()
+            return Response({'Success': 'Contract deleted successfully'}, status=status.HTTP_200_OK)
+        return Response({'Access denied': 'Only the client and technician have access to their contract'},
+                        status=status.HTTP_401_UNAUTHORIZED)
+
+    def put(self, request, contract_id, *args, **kwargs):
+        contract = Contract.objects.filter(id=contract_id)
+        if not contract.exists():
+            return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
+        contract = contract[0]
+        if request.user == contract.client or request.user == contract.technician:
+            for field, value in request.data.items():
+                setattr(contract, field, value)
             contract.save()
-            return Response({'Success': 'First Stage info saved in the contract',
-                             'stage': DeliveryStageSerializer(stage).data}, status=status.HTTP_201_CREATED)
-        if stage == 2:
-            if contract.second_stage:
-                for key, value in request.data:
-                    contract.second_stage[key] = value
-                    contract.second_stage.save()
-                stage = DiagnosticStageSerializer(contract.second_stage).data
-                return Response({'Success': 'Second Stage info edited successfully', 'stage': stage},
-                                status=status.HTTP_200_OK)
-            serializer = DiagnosticStageSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            stage = serializer.save()
-            contract.second_stage = stage
-            contract.save()
-            return Response({'Success': 'Second Stage info saved in the contract',
-                             'stage': DiagnosticStageSerializer(stage).data}, status=status.HTTP_201_CREATED)
-        if stage == 3:
-            if contract.third_stage:
-                for key, value in request.data:
-                    contract.third_stage[key] = value
-                    contract.third_stage.save()
-                stage = FixingStageSerializer(contract.third_stage).data
-                return Response({'Success': 'Third Stage info edited successfully', 'stage': stage},
-                                status=status.HTTP_200_OK)
-            serializer = FixingStageSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            stage = serializer.save()
-            contract.third_stage = stage
-            contract.save()
-            return Response({'Success': 'Third Stage info saved in the contract',
-                             'stage': FixingStageSerializer(stage).data}, status=status.HTTP_201_CREATED)
+            return Response({'Success': 'Contract info edited successfully'}, status=status.HTTP_200_OK)
+        return Response({'Access denied': 'Only the client and technician have access to their contract'},
+                        status=status.HTTP_401_UNAUTHORIZED)

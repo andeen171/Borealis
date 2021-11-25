@@ -56,12 +56,11 @@ class ListTechnicians(APIView):
     ]
 
     def get(self, request, *args, **kwargs):
-        technicians = User.objects.filter(is_staff=True)
+        technicians = User.objects.filter(staff=True)
         technicians_profiles = []
         for tech in technicians:
             technician = ListTechniciansSerializer(tech)
             profile = Profile.objects.filter(user=tech)
-            print('a')
             if profile.exists():
                 profile = ProfileSerializer(tech.profile)
                 tech_profile = technician.data | profile.data

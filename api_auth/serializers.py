@@ -15,11 +15,11 @@ class UserSerializer(serializers.ModelSerializer):
 class ClientRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'password', 'full_name')
+        fields = ('email', 'password', 'full_name', 'cpf')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create_user(validated_data['email'], validated_data['full_name'],
+        user = User.objects.create_user(validated_data['email'], validated_data['full_name'], validated_data['cpf'],
                                         validated_data['password'])
         return user
 
@@ -27,7 +27,7 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
 class TechnicianRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'password', 'full_name')
+        fields = ('email', 'password', 'full_name', 'cpf')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -67,4 +67,4 @@ class RoleSerializer(serializers.ModelSerializer):
 class ListTechniciansSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name')
+        fields = ('email', 'full_name')

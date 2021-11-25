@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, Category, Offer, Contract, Image, DeliveryStage, DiagnosticStage, FixingStage
+from .models import Order, Offer, Contract, Image
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         order = Order(title=validated_data['title'], description=validated_data['description'],
-                      category=validated_data['category'], user=validated_data['user'])
+                      category=validated_data['category'], device=validated_data['device'], user=validated_data['user'])
         order.save()
         return order
 
@@ -25,12 +25,6 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderImageSerializer(serializers.Serializer):
     images = ImageSerializer(many=True)
     info = OrderSerializer()
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = "__all__"
 
 
 class OfferSerializer(serializers.ModelSerializer):
@@ -48,20 +42,7 @@ class OfferSerializer(serializers.ModelSerializer):
         return offer
 
 
-class DeliveryStageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DeliveryStage
-        fields = "__all__"
-
-    def create(self, validated_data):
-        stage = DeliveryStage(address=validated_data["address"], sending=validated_data["sending"],
-                              description=validated_data["description"],
-                              ending_prediction=validated_data["ending_prediction"])
-        stage.save()
-        return stage
-
-
-class CreateContractSerializer(serializers.ModelSerializer):
+class ContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
         fields = "__all__"
@@ -73,24 +54,3 @@ class CreateContractSerializer(serializers.ModelSerializer):
         contract.save()
         return contract
 
-
-class DiagnosticStageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DiagnosticStage
-        fields = "__all__"
-
-
-class FixingStageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FixingStage
-        fields = "__all__"
-
-
-class ContractSerializer(serializers.ModelSerializer):
-    first_stage = DeliveryStageSerializer()
-    second_stage = DiagnosticStageSerializer()
-    third_stage = FixingStageSerializer()
-
-    class Meta:
-        model = Contract
-        fields = "__all__"
