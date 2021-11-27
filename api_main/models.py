@@ -54,6 +54,7 @@ class Contract(models.Model):
 
 class Stage(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE)
+    level = models.IntegerField(default=2)
     description = models.CharField(max_length=512)
     started_at = models.DateTimeField(auto_now_add=True)
     ending_prediction = models.DateTimeField(null=True)

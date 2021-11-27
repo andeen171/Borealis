@@ -65,7 +65,7 @@ class User(AbstractBaseUser):
         unique=True,
     )
     full_name = models.CharField(max_length=255, blank=True, null=True)
-    cpf = models.CharField(max_length=11, blank=True, null=True, unique=True)
+    cpf = models.CharField(max_length=11, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     staff = models.BooleanField(default=False)  # a admin user; non super-user
     admin = models.BooleanField(default=False)  # a superuser
@@ -108,11 +108,6 @@ class User(AbstractBaseUser):
         return self.admin
 
 
-class Role(models.Model):
-    name = models.CharField(max_length=128)
-    users = models.IntegerField(default=0)
-
-
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     country = models.CharField(max_length=128)
@@ -125,13 +120,9 @@ class Address(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    description = models.TextField(null=True)
-    role = models.ForeignKey(Role, on_delete=models.DO_NOTHING, null=True)
-    pfp = ProcessedImageField(upload_to='static/images/pfps/',
-                              processors=[ResizeToFill(100, 100)],
-                              format='JPEG',
-                              options={'quality': 60},
-                              default='static/images/pfps/default.jpg')
+    description = models.TextField(null=True, blank=True)
+    pfp = ProcessedImageField(upload_to='static/images/pfps/', processors=[ResizeToFill(100, 100)],
+                              format='JPEG', options={'quality': 60}, default='static/images/pfps/default.jpg')
 
     @receiver(post_save, sender=User)
     def create_user_profile(sender, instance, created, **kwargs):

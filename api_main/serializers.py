@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, Offer, Contract, Image
+from .models import Order, Offer, Contract, Image, Stage
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -54,3 +54,20 @@ class ContractSerializer(serializers.ModelSerializer):
         contract.save()
         return contract
 
+
+class StageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stage
+        fields = "__all__"
+
+    def create(self, validated_data):
+        stage = Stage(contract=validated_data['contract'], level=validated_data['level'],
+                      description=validated_data['description'],
+                      ending_prediction=validated_data['ending_prediction'])
+        stage.save()
+        return stage
+
+
+class ContractStageSerializer(serializers.Serializer):
+    info = ContractSerializer()
+    stages = StageSerializer(many=True)

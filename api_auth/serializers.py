@@ -1,4 +1,4 @@
-from .models import Profile, Role
+from .models import Profile
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
@@ -19,8 +19,8 @@ class ClientRegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create_user(validated_data['email'], validated_data['full_name'], validated_data['cpf'],
-                                        validated_data['password'])
+        user = User.objects.create_user(validated_data['email'], validated_data['full_name'],
+                                        validated_data['cpf'], validated_data['password'])
         return user
 
 
@@ -32,7 +32,7 @@ class TechnicianRegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create_staffuser(validated_data['email'], validated_data['full_name'],
-                                             validated_data['password'])
+                                             validated_data['cpf'], validated_data['password'])
         return user
 
 
@@ -50,18 +50,7 @@ class LoginSerializer(serializers.Serializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('description', 'role')
-
-
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = ('name', 'description')
-
-    def create(self, validated_data):
-        role = Role(name=validated_data['name'], description=validated_data['description'])
-        role.save()
-        return role
+        fields = ('pfp', 'description')
 
 
 class ListTechniciansSerializer(serializers.ModelSerializer):

@@ -1,11 +1,14 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Order, Offer, Contract, Image
+from .models import Order, Offer, Contract, Image, Stage
 from Borealis.permissions import IsClient, IsTechnician
-from .serializers import (OrderSerializer, OfferSerializer,
-                          OrderImageSerializer, ContractSerializer)
-
+from datetime import datetime
+from django.contrib.auth import get_user_model
+from api_auth.serializers import ProfileSerializer
+from .serializers import (OrderSerializer, OfferSerializer, OrderImageSerializer,
+                          ContractSerializer, StageSerializer, ContractStageSerializer)
+User = get_user_model()
 
 class OrdersAPI(APIView):
     def get(self, request, *args, **kwargs):
@@ -185,33 +188,106 @@ class ContractInstanceAPI(APIView):
         if not contract.exists():
             return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
         contract = contract[0]
-        if request.user == contract.client or request.user == contract.technician:
+        if request.user != contract.client and request.user != contract.technician:
+            return Response({'Access denied': 'Only the client and technician have access to their contract'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        stages = Stage.objects.filter(contract=contract_id)
+        if stages.exists():
+            serializer = ContractStageSerializer({'info': contract, 'stages': stages})
+        else:
             serializer = ContractSerializer(contract)
-            contract = serializer.data
-            return Response(contract, status=status.HTTP_200_OK)
-        return Response({'Access denied': 'Only the client and technician have access to their contract'},
-                        status=status.HTTP_401_UNAUTHORIZED)
+        contract_stages = serializer.data
+        return Response(contract_stages, status=status.HTTP_200_OK)
 
     def delete(self, request, contract_id, *args, **kwargs):
         contract = Contract.objects.filter(id=contract_id)
         if not contract.exists():
             return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
         contract = contract[0]
-        if request.user == contract.client or request.user == contract.technician:
-            contract.delete()
-            return Response({'Success': 'Contract deleted successfully'}, status=status.HTTP_200_OK)
-        return Response({'Access denied': 'Only the client and technician have access to their contract'},
-                        status=status.HTTP_401_UNAUTHORIZED)
+        if request.user != contract.client and request.user != contract.technician:
+            return Response({'Access denied': 'Only the client and technician have access to their contract'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        contract.delete()
+        return Response({'Success': 'Contract deleted successfully'}, status=status.HTTP_200_OK)
 
     def put(self, request, contract_id, *args, **kwargs):
         contract = Contract.objects.filter(id=contract_id)
         if not contract.exists():
             return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
         contract = contract[0]
-        if request.user == contract.client or request.user == contract.technician:
-            for field, value in request.data.items():
-                setattr(contract, field, value)
+        if request.user != contract.client and request.user != contract.technician:
+            return Response({'Access denied': 'Only the client and technician have access to their contract'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        for field, value in request.data.items():
+            setattr(contract, field, value)
+        contract.save()
+        return Response({'Success': 'Contract info edited successfully'}, status=status.HTTP_200_OK)
+
+    def post(self, request, contract_id, *args, **kwargs):
+        contract = Contract.objects.filter(id=contract_id)
+        if not contract.exists():
+            return Response({'Not found': 'Contract not found'}, status=status.HTTP_404_NOT_FOUND)
+        contract = contract[0]
+        if request.user != contract.technician:
+            return Response({'Access denied': 'Only technician responsible for contract have permission to advance it'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        if contract.level == 4:
+            contract.closed = True
+            contract.closed_at = datetime.now()
             contract.save()
-            return Response({'Success': 'Contract info edited successfully'}, status=status.HTTP_200_OK)
-        return Response({'Access denied': 'Only the client and technician have access to their contract'},
-                        status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'Finished': 'Contract completed successfully'}, status=status.HTTP_200_OK)
+        contract.level += 1
+        contract.save()
+        request.data['level'] = contract.level
+        request.data['contract'] = contract.id
+        serializer = StageSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        stage = serializer.save()
+        return Response({'Success': 'Contract advanced successfully', 'stage': StageSerializer(stage).data},
+                        status=status.HTTP_200_OK)
+
+
+class ProfileView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+    ]
+
+    def get(self, request, user_id, *args, **kwargs):
+        user = User.objects.filter(id=user_id)
+        if not user.exists():
+            return Response({'Not found': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user[0]
+        profile = ProfileSerializer(user.profile).data
+        body = {'info': profile}
+        if user.staff:
+            offers = Offer.objects.filter(user=user)
+            serializer = OfferSerializer(offers, many=True)
+            body['offers'] = serializer.data
+            if request.user == user:
+                contracts = Contract.objects.filter(technician=user)
+                serializer = ContractSerializer(contracts, many=True)
+                body["contracts"] = serializer.data
+        else:
+            orders = Order.objects.filter(user=user)
+            serializer = OrderSerializer(orders, many=True)
+            body['orders'] = serializer.data
+            if request.user == user:
+                contracts = Contract.objects.filter(client=user)
+                serializer = ContractSerializer(contracts, many=True)
+                body["contracts"] = serializer.data
+        return Response(body, status=status.HTTP_200_OK)
+
+    def put(self, request, user_id, *args, **kwargs):
+        user = User.objects.filter(id=user_id)
+        if not user.exists():
+            return Response({'Not found': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user[0]
+        if user != request.user:
+            return Response({'Permission denied': 'You dont have permission to edit this profile'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        profile = user.profile
+        for field, value in request.data.items():
+            setattr(profile, field, value)
+        profile.save()
+        return Response({'Success': 'Profile edited successfully', 'profile': ProfileSerializer(profile).data},
+                        status=status.HTTP_200_OK)

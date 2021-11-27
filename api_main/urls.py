@@ -1,6 +1,6 @@
 from django.urls import path
-from api_auth.views import ListTechnicians
-from .views import (OrdersAPI, OrderInstanceAPI, OffersAPI, OfferInstanceAPI, ContractsAPI, ContractInstanceAPI)
+from .views import (OrdersAPI, OrderInstanceAPI, OffersAPI, OfferInstanceAPI,
+                    ContractsAPI, ContractInstanceAPI, ProfileView)
 
 
 urlpatterns = [
@@ -9,6 +9,6 @@ urlpatterns = [
     path('order/<int:order_id>/', OrderInstanceAPI.as_view()),
     path('offer/<int:offer_id>/', OfferInstanceAPI.as_view()),
     path('contract/<int:contract_id>/', ContractInstanceAPI.as_view()),
-    path('technicians/', ListTechnicians.as_view()),
     path('offer/accept/', ContractsAPI.as_view()),
+    path('profile/<int:user_id>/', ProfileView.as_view()),
 ]
