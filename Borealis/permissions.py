@@ -11,3 +11,8 @@ class IsTechnician(permissions.BasePermission):
     def has_permission(self, request, view):
         is_staff = request.user.is_staff
         return is_staff
+
+
+class ReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS

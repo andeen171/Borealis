@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Order, Offer, Contract, Image, Stage
-from Borealis.permissions import IsClient, IsTechnician
+from Borealis.permissions import IsClient, IsTechnician, ReadOnly
 from datetime import datetime
 from django.contrib.auth import get_user_model
 from api_auth.serializers import ProfileSerializer
@@ -10,7 +10,10 @@ from .serializers import (OrderSerializer, OfferSerializer, OrderImageSerializer
                           ContractSerializer, StageSerializer, ContractStageSerializer)
 User = get_user_model()
 
+
 class OrdersAPI(APIView):
+    permission_classes = [permissions.IsAuthenticated | ReadOnly, IsClient | ReadOnly]
+
     def get(self, request, *args, **kwargs):
         orders = Order.objects.all()
         results = []
@@ -54,7 +57,7 @@ class OrderInstanceAPI(APIView):
         offers = Offer.objects.filter(order=order)
         order = OrderImageSerializer({'images': images, 'info': order})
         order = order.data
-        if offers.exists() and not request.user.is_staff:
+        if offers.exists():
             offers_serializer = OfferSerializer(offers, many=True)
             offers = offers_serializer.data
             return Response({
@@ -99,6 +102,9 @@ class OffersAPI(generics.CreateAPIView):
     serializer_class = OfferSerializer
 
     def create(self, request, *args, **kwargs):
+        if len(Offer.objects.filter(user=request.user, order_id=request.data['order'])) > 0:
+            return Response({'Bad request': 'Technician already have an active offer in this order!'},
+                            status=status.HTTP_400_BAD_REQUEST)
         request.data['user'] = request.user.id
         return super(OffersAPI, self).create(request, *args, **kwargs)
 
