@@ -15,6 +15,7 @@ import Copyright from "./layout/Copyright";
 import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actionCreators } from "../actionCreators";
+import { Link } from "react-router-dom";
 
 const theme = createTheme();
 
@@ -86,6 +87,16 @@ export default function RegisterPage() {
                 <TextField
                   required
                   fullWidth
+                  id="device"
+                  label="Device"
+                  name="device"
+                  autoComplete="Device"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
                   id="category"
                   label="Category"
                   name="category"
@@ -107,14 +118,25 @@ export default function RegisterPage() {
                 <CircularProgress variant="determinate" value={progress} />
               </Grid>
             ) : (
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                Create
-              </Button>
+              <Grid align="center" alignItems="center">
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                >
+                  Create
+                </Button>
+                <Button
+                  color="secondary"
+                  variant="contained"
+                  size="large"
+                  to="/"
+                  component={Link}
+                >
+                  Back
+                </Button>
+              </Grid>
             )}
           </Box>
         </Box>

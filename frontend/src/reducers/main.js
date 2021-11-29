@@ -6,6 +6,8 @@ import {
   GET_ORDER_DETAILS,
   UPLOADING_FILES,
   ACCEPT_OFFER,
+  CREATE_OFFER,
+  ADVANCE_STAGE,
 } from "../actions/types";
 
 const initialState = {
@@ -14,18 +16,29 @@ const initialState = {
     images: [],
     info: {
       title: "",
+      device: "",
       description: "",
-      image: [],
       created_at: "",
       closed: "",
       closed_at: "",
-      category: 0,
+      category: "",
       user: null,
     },
   },
   offers: [],
   progress: 0,
-  contracts: [],
+  stages: [],
+  contract: {
+    value: 0,
+    level: 1,
+    created_at: "",
+    closed: false,
+    closed_at: "",
+    order: 0,
+    offer: 0,
+    client: 0,
+    technician: 0,
+  },
 };
 
 const reducer = (state = initialState, action) => {
@@ -59,7 +72,18 @@ const reducer = (state = initialState, action) => {
     case ACCEPT_OFFER:
       return {
         ...state,
-        contracts: [action.payload, ...state.contracts],
+        contract: action.payload,
+      };
+    case CREATE_OFFER:
+      return {
+        ...state,
+        offers: [action.payload, ...state.offers],
+      };
+    case ADVANCE_STAGE:
+      return {
+        ...state,
+        contract: action.payload.info,
+        stages: [action.payload.stages, ...state.stages],
       };
     default:
       return state;

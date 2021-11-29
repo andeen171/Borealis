@@ -18,6 +18,9 @@ import {
   Container,
   Box,
   Modal,
+  TextField,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import CardActionArea from "@mui/material/CardActionArea";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -30,20 +33,39 @@ export default function OrderDetailPage(props) {
   const offers = useSelector((state) => state.main.offers);
   const is_staff = useSelector((state) => state.auth.user.is_staff);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const user_id = useSelector((state) => state.auth.user.id);
   const history = useHistory();
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const [openOfferDetails, setOpenOfferDetails] = React.useState(false);
+  const handleOpenDetails = () => setOpenOfferDetails(true);
+  const handleCloseDetails = () => setOpenOfferDetails(false);
+  const [openMakeOffer, setOpenMakeOffer] = React.useState(false);
+  const handleOpenMake = () => setOpenMakeOffer(true);
+  const handleCloseMake = () => setOpenMakeOffer(false);
+  const [needReplacement, setNeedReplacement] = React.useState(false);
+  const handleNeedChange = () => {
+    setNeedReplacement(!needReplacement);
+  };
   const dispatch = useDispatch();
-  const { getOrderDetails, loadUser, acceptOffer } = bindActionCreators(
-    actionCreators,
-    dispatch
-  );
+  const { getOrderDetails, loadUser, acceptOffer, createOffer } =
+    bindActionCreators(actionCreators, dispatch);
   const orderCode = props.match.params.orderCode;
   useEffect(() => {
     getOrderDetails(orderCode);
     loadUser();
   }, []);
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    createOffer(
+      orderCode,
+      data.get("problem"),
+      data.get("description"),
+      data.get("value"),
+      needReplacement,
+      needReplacement ? data.get("replacements") : ""
+    );
+    handleCloseMake();
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -69,6 +91,12 @@ export default function OrderDetailPage(props) {
                   </Typography>
                   <br />
                   <Grid item xs={10}>
+                    <Typography variant="h6" color="secondary">
+                      Device: {order.info.device}
+                    </Typography>
+                    <Typography variant="h6" color="secondary">
+                      Category: {order.info.category}
+                    </Typography>
                     <Typography variant="h5">
                       {order.info.description}
                     </Typography>
@@ -78,13 +106,102 @@ export default function OrderDetailPage(props) {
                       size="large"
                       variant="outlined"
                       color="success"
-                      sx={{ position: "absolute", bottom: "60px" }}
+                      onClick={handleOpenMake}
                     >
                       Make an offer
                     </Button>
                   ) : null}
                 </CardContent>
               </Grid>
+              <Modal
+                open={openMakeOffer}
+                onClose={handleCloseMake}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+              >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    width: 400,
+                    bgcolor: "background.paper",
+                    boxShadow: 24,
+                    p: 4,
+                  }}
+                  component="form"
+                  noValidate
+                  onSubmit={handleSubmit}
+                >
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={12}>
+                      <TextField
+                        autoComplete="problem"
+                        name="problem"
+                        required
+                        fullWidth
+                        id="problem"
+                        label="What is the problem"
+                        autoFocus
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={12}>
+                      <TextField
+                        required
+                        fullWidth
+                        id="description"
+                        label="Description"
+                        name="description"
+                        autoComplete="description"
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        required
+                        fullWidth
+                        type="number"
+                        id="value"
+                        label="Value estimated"
+                        name="value"
+                        autoComplete="value"
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            onChange={handleNeedChange}
+                            id="need_replacement"
+                            name="need_replacement"
+                          />
+                        }
+                        label="Need replacements?"
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        type="text"
+                        id="replacements"
+                        name="replacements"
+                        autoComplete="Replacements"
+                        inputProps={{ readOnly: needReplacement }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      color="success"
+                      type="submit"
+                    >
+                      Create offer
+                    </Button>
+                  </Typography>
+                </Box>
+              </Modal>
               <Grid item align="center" xs={4}>
                 <Carousel>
                   {order.images.map((image, i) => {
@@ -110,7 +227,7 @@ export default function OrderDetailPage(props) {
             {offers.map((offer, i) => {
               return (
                 <Grid item xs={12} md={6} key={i}>
-                  <CardActionArea onClick={handleOpen}>
+                  <CardActionArea onClick={handleOpenDetails}>
                     <Card sx={{ display: "flex" }}>
                       <CardContent sx={{ flex: 1 }}>
                         <Typography component="h2" variant="h5">
@@ -134,8 +251,8 @@ export default function OrderDetailPage(props) {
                     </Card>
                   </CardActionArea>
                   <Modal
-                    open={open}
-                    onClose={handleClose}
+                    open={openOfferDetails}
+                    onClose={handleCloseDetails}
                     aria-labelledby="modal-modal-title"
                     aria-describedby="modal-modal-description"
                   >
@@ -169,23 +286,27 @@ export default function OrderDetailPage(props) {
                         {offer.description}
                       </Typography>
                       <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          to="/login"
-                          color="success"
-                          onClick={() =>
-                            acceptOffer(
-                              {
-                                order: parseInt(orderCode),
-                                offer: offer.id,
-                              },
-                              history
-                            )
-                          }
-                        >
-                          Accept offer
-                        </Button>
+                        {user_id === order.info.user ? (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            to="/login"
+                            color="success"
+                            onClick={() =>
+                              acceptOffer(
+                                {
+                                  order: parseInt(orderCode),
+                                  offer: offer.id,
+                                },
+                                history
+                              )
+                            }
+                          >
+                            Accept offer
+                          </Button>
+                        ) : (
+                          ""
+                        )}
                       </Typography>
                     </Box>
                   </Modal>

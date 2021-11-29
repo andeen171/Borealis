@@ -1,5 +1,6 @@
 import axios from "axios";
 import { createMessage, returnErrors } from "./messages";
+import { tokenConfig } from "./auth";
 
 import {
   GET_ORDERS,
@@ -8,6 +9,8 @@ import {
   GET_ORDER_DETAILS,
   AUTH_ERROR,
   UPLOADING_FILES,
+  CREATE_OFFER,
+  ADVANCE_STAGE,
 } from "./types";
 
 export const getOrders = () => (dispatch) => {
@@ -33,7 +36,7 @@ export const deleteOrder = (id) => (dispatch, getState) => {
   axios
     .delete(`/api/order/${id}/`, tokenConfig(dispatch, getState))
     .then((res) => {
-      dispatch(createMessage({ deleteOrder: "Order Deleted" }));
+      dispatch(createMessage(res));
       dispatch({
         type: DELETE_ORDER,
         payload: id,
@@ -44,7 +47,7 @@ export const deleteOrder = (id) => (dispatch, getState) => {
 
 export const createOrder = (order, history) => (dispatch, getState) => {
   axios
-    .post("/api/order/create/", order, tokenConfig(dispatch, getState))
+    .post("/api/orders/", order, uploadConfig(dispatch, getState))
     .then((res) => {
       dispatch(history.push(`/order/${res.data.info.id}/`));
     });
@@ -52,7 +55,7 @@ export const createOrder = (order, history) => (dispatch, getState) => {
 
 export const getOrderDetails = (orderCode) => (dispatch, getState) => {
   axios
-    .get(`/api/order/${orderCode}/`, tokenConfig(dispatch, getState))
+    .get(`/api/order/${orderCode}/`, uploadConfig(dispatch, getState))
     .then((res) => {
       dispatch({
         type: GET_ORDER_DETAILS,
@@ -69,11 +72,48 @@ export const getOrderDetails = (orderCode) => (dispatch, getState) => {
     });
 };
 
+export const createOffer =
+  (
+    order,
+    problem,
+    description,
+    value_estimate,
+    need_replacement,
+    replacements
+  ) =>
+  (dispatch, getState) => {
+    let config = uploadConfig(dispatch, getState);
+    config.headers["Content-Type"] = "application/json";
+    const body = JSON.stringify({
+      problem,
+      description,
+      value_estimate,
+      need_replacement,
+      replacements,
+      order,
+    });
+
+    axios
+      .post("/api/offers/", body, config)
+      .then((res) => {
+        dispatch({
+          type: CREATE_OFFER,
+          payload: res.data,
+        });
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          dispatch({
+            type: AUTH_ERROR,
+          });
+        }
+        dispatch(returnErrors(err.response.data, err.response.status));
+      });
+  };
+
 export const acceptOffer = (info, history) => (dispatch, getState) => {
-  let config = tokenConfig(dispatch, getState);
-  config.headers["Content-Type"] = "application/json";
   axios
-    .post("/api/offer/accept/", info, config)
+    .post("/api/offer/accept/", info, tokenConfig(dispatch, getState))
     .then((res) => {
       dispatch(
         {
@@ -93,11 +133,32 @@ export const acceptOffer = (info, history) => (dispatch, getState) => {
     });
 };
 
-export const tokenConfig = (dispatch, getState) => {
-  // Get token from state
-  const token = getState().auth.token;
+export const progressContract =
+  (contract_id, stage) => (dispatch, getState) => {
+    axios
+      .post(
+        `/api/contract/${contract_id}`,
+        stage,
+        tokenConfig(dispatch, getState)
+      )
+      .then((res) => {
+        dispatch({
+          type: ADVANCE_STAGE,
+          payload: res.data,
+        });
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          dispatch({
+            type: AUTH_ERROR,
+          });
+        }
+        dispatch(returnErrors(err.response.data, err.response.status));
+      });
+  };
 
-  // Headers
+export const uploadConfig = (dispatch, getState) => {
+  const token = getState().auth.token;
   const config = {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -110,7 +171,6 @@ export const tokenConfig = (dispatch, getState) => {
     },
   };
 
-  // If token, add to headers config
   if (token) {
     config.headers["Authorization"] = `Token ${token}`;
   }

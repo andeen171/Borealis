@@ -6,4 +6,6 @@ export {
   deleteOrder,
   getOrderDetails,
   acceptOffer,
+  createOffer,
+  progressContract,
 } from "./main";
