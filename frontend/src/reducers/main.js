@@ -8,6 +8,8 @@ import {
   ACCEPT_OFFER,
   CREATE_OFFER,
   ADVANCE_STAGE,
+  GET_CONTRACT,
+  FINISH_CONTRACT,
 } from "../actions/types";
 
 const initialState = {
@@ -82,8 +84,18 @@ const reducer = (state = initialState, action) => {
     case ADVANCE_STAGE:
       return {
         ...state,
-        contract: action.payload.info,
         stages: [action.payload.stages, ...state.stages],
+      };
+    case GET_CONTRACT:
+      return {
+        ...state,
+        contract: action.payload.info,
+        stages: action.payload.stages,
+      };
+    case FINISH_CONTRACT:
+      return {
+        ...state,
+        contract: { ...state.contract, closed: true },
       };
     default:
       return state;

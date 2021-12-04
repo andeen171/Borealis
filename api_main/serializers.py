@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Order, Offer, Contract, Image, Stage
+from django.utils.timezone import make_aware
 
 
 class ImageSerializer(serializers.ModelSerializer):

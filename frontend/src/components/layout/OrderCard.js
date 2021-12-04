@@ -20,6 +20,12 @@ export default function OrderCard(props) {
         <Typography variant="subtitle1" color="text.secondary">
           {info.created_at}
         </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          {info.device}
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          {info.category}
+        </Typography>
         <Typography variant="subtitle1" paragraph>
           {info.description}
         </Typography>
@@ -37,6 +43,8 @@ OrderCard.propTypes = {
   post: PropTypes.shape({
     info: PropTypes.shape({
       id: PropTypes.number.isRequired,
+      device: PropTypes.string.isRequired,
+      category: PropTypes.string.isRequired,
       created_at: PropTypes.string.isRequired,
       description: PropTypes.string.isRequired,
       title: PropTypes.string.isRequired,

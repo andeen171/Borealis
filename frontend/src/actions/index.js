@@ -7,5 +7,7 @@ export {
   getOrderDetails,
   acceptOffer,
   createOffer,
+  getContractInfo,
   progressContract,
+  finishContract,
 } from "./main";

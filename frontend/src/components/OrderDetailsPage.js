@@ -91,10 +91,10 @@ export default function OrderDetailPage(props) {
                   </Typography>
                   <br />
                   <Grid item xs={10}>
-                    <Typography variant="h6" color="secondary">
+                    <Typography variant="h6" color="text.secondary">
                       Device: {order.info.device}
                     </Typography>
-                    <Typography variant="h6" color="secondary">
+                    <Typography variant="h6" color="text.secondary">
                       Category: {order.info.category}
                     </Typography>
                     <Typography variant="h5">

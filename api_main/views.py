@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Order, Offer, Contract, Image, Stage
 from Borealis.permissions import IsClient, IsTechnician, ReadOnly
-from datetime import datetime
+from django.utils.timezone import now
 from django.contrib.auth import get_user_model
 from api_auth.serializers import ProfileSerializer
 from .serializers import (OrderSerializer, OfferSerializer, OrderImageSerializer,
@@ -200,10 +200,12 @@ class ContractInstanceAPI(APIView):
         stages = Stage.objects.filter(contract=contract_id)
         if stages.exists():
             serializer = ContractStageSerializer({'info': contract, 'stages': stages})
+            contract_stages = serializer.data
+            return Response(contract_stages, status=status.HTTP_200_OK)
         else:
             serializer = ContractSerializer(contract)
-        contract_stages = serializer.data
-        return Response(contract_stages, status=status.HTTP_200_OK)
+            contract = serializer.data
+            return Response({'info': contract}, status=status.HTTP_200_OK)
 
     def delete(self, request, contract_id, *args, **kwargs):
         contract = Contract.objects.filter(id=contract_id)
@@ -239,9 +241,13 @@ class ContractInstanceAPI(APIView):
                             status=status.HTTP_401_UNAUTHORIZED)
         if contract.level == 4:
             contract.closed = True
-            contract.closed_at = datetime.now()
+            contract.closed_at = now()
             contract.save()
             return Response({'Finished': 'Contract completed successfully'}, status=status.HTTP_200_OK)
+        previous_stage = Stage.objects.get(id=contract_id, level=contract.level)
+        previous_stage.finished = True
+        previous_stage.finished_at = now()
+        previous_stage.save()
         contract.level += 1
         contract.save()
         request.data['level'] = contract.level

@@ -11,6 +11,8 @@ import {
   UPLOADING_FILES,
   CREATE_OFFER,
   ADVANCE_STAGE,
+  GET_CONTRACT,
+  FINISH_CONTRACT,
 } from "./types";
 
 export const getOrders = () => (dispatch) => {
@@ -133,14 +135,32 @@ export const acceptOffer = (info, history) => (dispatch, getState) => {
     });
 };
 
+export const getContractInfo = (contract_id) => (dispatch, getState) => {
+  axios
+    .get(`/api/contract/${contract_id}/`, uploadConfig(dispatch, getState))
+    .then((res) => {
+      dispatch({
+        type: GET_CONTRACT,
+        payload: res.data,
+      });
+    })
+    .catch((err) => {
+      if (err.response.status === 401) {
+        dispatch({
+          type: AUTH_ERROR,
+        });
+      }
+      dispatch(returnErrors(err.response.data, err.response.status));
+    });
+};
+
 export const progressContract =
-  (contract_id, stage) => (dispatch, getState) => {
+  (contract_id, description, ending_prediction) => (dispatch, getState) => {
+    const config = uploadConfig(dispatch, getState);
+    config.headers["Content-Type"] = "application/json";
+    const body = JSON.stringify({ description, ending_prediction });
     axios
-      .post(
-        `/api/contract/${contract_id}`,
-        stage,
-        tokenConfig(dispatch, getState)
-      )
+      .post(`/api/contract/${contract_id}/`, body, config)
       .then((res) => {
         dispatch({
           type: ADVANCE_STAGE,
@@ -156,6 +176,29 @@ export const progressContract =
         dispatch(returnErrors(err.response.data, err.response.status));
       });
   };
+
+export const finishContract = (contract_id) => (dispatch, getState) => {
+  axios
+    .post(
+      `/api/contract/${contract_id}/`,
+      null,
+      uploadConfig(dispatch, getState)
+    )
+    .then((res) => {
+      dispatch({
+        type: FINISH_CONTRACT,
+        payload: res.data,
+      });
+    })
+    .catch((err) => {
+      if (err.response.status === 401) {
+        dispatch({
+          type: AUTH_ERROR,
+        });
+      }
+      dispatch(returnErrors(err.response.data, err.response.status));
+    });
+};
 
 export const uploadConfig = (dispatch, getState) => {
   const token = getState().auth.token;
