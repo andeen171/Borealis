@@ -18,10 +18,12 @@ import {
   Grid,
   TextField,
   Modal,
+  Rating,
 } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
+import { Link, useHistory } from "react-router-dom";
 const theme = createTheme();
-const steps = ["Shipping", "Diagnostics", "Fixing work", "Review Service"];
+const steps = ["Shipping", "Diagnostics", "Fixing work", "Devolution / Review"];
 
 export default function ContractDetailsPage(props) {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -29,12 +31,14 @@ export default function ContractDetailsPage(props) {
   const stages = useSelector((state) => state.main.stages);
   const contract = useSelector((state) => state.main.contract);
   const dispatch = useDispatch();
+  const history = useHistory();
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const { loadUser, getContractInfo, progressContract, finishContract } =
     bindActionCreators(actionCreators, dispatch);
   const [activeStep, setActiveStep] = React.useState(contract.level);
+  const [value, setValue] = React.useState(2);
   const handleNext = () => {
     setActiveStep(activeStep + 1);
   };
@@ -44,23 +48,199 @@ export default function ContractDetailsPage(props) {
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    if (contract.level === 4) {
-      finishContract(contractCode);
-      return;
-    }
     progressContract(
       contractCode,
       data.get("description"),
       data.get("ending_prediction")
     );
+    handleClose();
   };
   const contractCode = props.match.params.contractCode;
 
   useEffect(() => {
     loadUser();
-    getContractInfo(contractCode);
+    getContractInfo(contractCode, history);
     setActiveStep(contract.level);
-  }, [contract.level, contract.closed]);
+  }, [contract.level, contract.closed, stages.length]);
+
+  if (contract.closed) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container maxWidth="lg">
+          {isAuthenticated ? <UserHeader /> : <Header />}
+          <div
+            style={{
+              marginLeft: "75px",
+              marginRight: "75px",
+              marginBottom: "75px",
+              color: "#494949",
+            }}
+          >
+            <Container component="main" maxWidth="sm" sx={{ mb: 4 }}>
+              <Paper
+                variant="outlined"
+                sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
+              >
+                <Grid spacing="10" container alignItems="center" align="center">
+                  <Grid item xs={12}>
+                    <Typography variant="h4" component="h5">
+                      How would you rate the technician work
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Rating
+                      size="large"
+                      name="half-rating"
+                      defaultValue={2.5}
+                      precision={0.5}
+                      value={value}
+                      onChange={(event, newValue) => {
+                        setValue(newValue);
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      type="text"
+                      name="review"
+                      id="review"
+                      placeholder="Comments"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button variant="outlined" to="/" component={Link}>
+                      Send review
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Container>
+          </div>
+        </Container>
+      </ThemeProvider>
+    );
+  }
+
+  const stageSelector = () => {
+    switch (activeStep - 1) {
+      case 0:
+        return (
+          <React.Fragment>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography component="h2" variant="h5" align="center">
+                  Shipping in progress
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography
+                  component="h5"
+                  variant="h6"
+                  align="center"
+                  paragraph
+                >
+                  Please wait until the technician gets your device and update
+                  the order with further information.
+                </Typography>
+              </Grid>
+            </Grid>
+          </React.Fragment>
+        );
+      case 1:
+        return (
+          <Grid container alignItems="left" spacing={2}>
+            <Grid item xs={12}>
+              <Typography component="p" color="text.secondary">
+                {stages[activeStep - 2].started_at}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography xs={12} component="h4" paragraph>
+                The order is currently in the diagnostic stage, right now the
+                technician is making a diagnosis of what is going to be done to
+                your device.
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography component="p" paragraph>
+                Technician description about this stage:
+                <br />
+                {stages[activeStep - 2].description}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography component="p">
+                {`Ending prediction: ${
+                  stages[activeStep - 2].ending_prediction
+                }`}
+              </Typography>
+            </Grid>
+          </Grid>
+        );
+      case 2:
+        return (
+          <Grid container alignItems="left" spacing={2}>
+            <Grid item xs={12}>
+              <Typography component="p" color="text.secondary">
+                {stages[activeStep - 2].started_at}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography xs={12} component="h4" paragraph>
+                The order is currently in the fixing stage, right now the
+                technician is doing the proper work to fix your device.
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography component="p" paragraph>
+                Technician description about this stage:
+                <br />
+                {stages[activeStep - 2].description}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography component="p">
+                {`Ending prediction: ${
+                  stages[activeStep - 2].ending_prediction
+                }`}
+              </Typography>
+            </Grid>
+          </Grid>
+        );
+      case 3:
+        return (
+          <Grid container alignItems="left" spacing={2}>
+            <Grid item xs={12}>
+              <Typography component="p" color="text.secondary">
+                {stages[activeStep - 2].started_at}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography xs={12} component="h4" paragraph>
+                The order is currently at the final stage, now you only have to
+                get your device back and review the order. If you already got
+                your device back wait until the technician update the order so
+                you can do your review
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography component="p" paragraph>
+                Technician description about this stage:
+                <br /> {stages[activeStep - 2].description}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography component="p">
+                {`Ending prediction: ${
+                  stages[activeStep - 2].ending_prediction
+                }`}
+              </Typography>
+            </Grid>
+          </Grid>
+        );
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -91,39 +271,7 @@ export default function ContractDetailsPage(props) {
                 ))}
               </Stepper>
               <React.Fragment>
-                {activeStep > 1 ? (
-                  <Grid container alignItems="left">
-                    <Typography
-                      component="h4"
-                      variant="h5"
-                      color="text.secondary"
-                    >
-                      {stages[activeStep - 2].started_at}
-                    </Typography>
-                    <Typography component="h4" variant="h5" paragraph>
-                      {stages[activeStep - 2].description}
-                    </Typography>
-                    <Typography component="h5" variant="h5">
-                      Ending prediction:{" "}
-                      {stages[activeStep - 2].ending_prediction}
-                    </Typography>
-                  </Grid>
-                ) : (
-                  <React.Fragment>
-                    <Typography component="h2" variant="h5" align="center">
-                      Shipping in progress
-                    </Typography>
-                    <Typography
-                      component="h5"
-                      variant="h6"
-                      align="center"
-                      paragraph
-                    >
-                      Please wait until the technician gets your device and
-                      update the order with further information.
-                    </Typography>
-                  </React.Fragment>
-                )}
+                {stageSelector()}
                 <React.Fragment>
                   <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                     {activeStep !== 1 && (
@@ -143,7 +291,8 @@ export default function ContractDetailsPage(props) {
                     {user_id === contract.technician && (
                       <Grid>
                         <Button
-                          variant="outline"
+                          variant="outlined"
+                          color="success"
                           onClick={
                             contract.level === 4
                               ? () => finishContract(contractCode)
@@ -151,7 +300,7 @@ export default function ContractDetailsPage(props) {
                           }
                           sx={{ mt: 3, ml: 1 }}
                         >
-                          Advance
+                          {contract.level === 4 ? "Finish" : "Advance"}
                         </Button>
                         <Modal
                           open={open}
@@ -210,9 +359,7 @@ export default function ContractDetailsPage(props) {
                                 color="success"
                                 type="submit"
                               >
-                                {contract.level < 4
-                                  ? "Advance Stage"
-                                  : "Finish contract"}
+                                Advance Stage
                               </Button>
                             </Typography>
                           </Box>

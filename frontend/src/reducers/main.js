@@ -10,6 +10,8 @@ import {
   ADVANCE_STAGE,
   GET_CONTRACT,
   FINISH_CONTRACT,
+  GET_PROFILE,
+  EDIT_PROFILE,
 } from "../actions/types";
 
 const initialState = {
@@ -30,6 +32,7 @@ const initialState = {
   offers: [],
   progress: 0,
   stages: [],
+  contracts: [],
   contract: {
     value: 0,
     level: 1,
@@ -40,6 +43,16 @@ const initialState = {
     offer: 0,
     client: 0,
     technician: 0,
+  },
+  profile: {
+    pfp: "",
+    description: "",
+    user: {
+      id: 0,
+      email: "",
+      full_name: "",
+      is_staff: false,
+    },
   },
 };
 
@@ -84,7 +97,7 @@ const reducer = (state = initialState, action) => {
     case ADVANCE_STAGE:
       return {
         ...state,
-        stages: [action.payload.stages, ...state.stages],
+        stages: [action.payload.stage, ...state.stages],
       };
     case GET_CONTRACT:
       return {
@@ -96,6 +109,21 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         contract: { ...state.contract, closed: true },
+      };
+    case GET_PROFILE:
+      return {
+        ...state,
+        profile: action.payload.info,
+        offers: action.payload.offers ? action.payload.offers : state.offers,
+        contracts: action.payload.contracts
+          ? action.payload.contracts
+          : state.contracts,
+        orders: action.payload.orders ? action.payload.orders : state.orders,
+      };
+    case EDIT_PROFILE:
+      return {
+        ...state,
+        profile: action.payload.profile,
       };
     default:
       return state;

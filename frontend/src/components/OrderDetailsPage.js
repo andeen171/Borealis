@@ -25,6 +25,7 @@ import {
 import CardActionArea from "@mui/material/CardActionArea";
 import CssBaseline from "@mui/material/CssBaseline";
 import { useHistory } from "react-router-dom";
+import OfferCard from "./layout/OfferCard";
 
 const theme = createTheme();
 
@@ -50,7 +51,7 @@ export default function OrderDetailPage(props) {
     bindActionCreators(actionCreators, dispatch);
   const orderCode = props.match.params.orderCode;
   useEffect(() => {
-    getOrderDetails(orderCode);
+    getOrderDetails(orderCode, history);
     loadUser();
   }, []);
   const handleSubmit = (event) => {
@@ -228,27 +229,7 @@ export default function OrderDetailPage(props) {
               return (
                 <Grid item xs={12} md={6} key={i}>
                   <CardActionArea onClick={handleOpenDetails}>
-                    <Card sx={{ display: "flex" }}>
-                      <CardContent sx={{ flex: 1 }}>
-                        <Typography component="h2" variant="h5">
-                          {offer.problem}
-                        </Typography>
-                        <Typography variant="subtitle1" color="text.secondary">
-                          {offer.sent_at}
-                        </Typography>
-                        <Typography variant="subtitle1" color="secondary">
-                          {offer.value_estimate}
-                        </Typography>
-                        <Typography variant="subtitle1" color="text.secondary">
-                          {offer.need_replacement
-                            ? "Replacements: " + offer.replacements
-                            : ""}
-                        </Typography>
-                        <Typography variant="subtitle1" paragraph>
-                          {offer.description}
-                        </Typography>
-                      </CardContent>
-                    </Card>
+                    <OfferCard offer={offer} />
                   </CardActionArea>
                   <Modal
                     open={openOfferDetails}

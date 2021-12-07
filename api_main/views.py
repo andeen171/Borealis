@@ -244,10 +244,11 @@ class ContractInstanceAPI(APIView):
             contract.closed_at = now()
             contract.save()
             return Response({'Finished': 'Contract completed successfully'}, status=status.HTTP_200_OK)
-        previous_stage = Stage.objects.get(id=contract_id, level=contract.level)
-        previous_stage.finished = True
-        previous_stage.finished_at = now()
-        previous_stage.save()
+        if contract.level > 2:
+            previous_stage = Stage.objects.get(id=contract_id, level=contract.level)
+            previous_stage.finished = True
+            previous_stage.finished_at = now()
+            previous_stage.save()
         contract.level += 1
         contract.save()
         request.data['level'] = contract.level
@@ -281,8 +282,13 @@ class ProfileView(APIView):
                 body["contracts"] = serializer.data
         else:
             orders = Order.objects.filter(user=user)
-            serializer = OrderSerializer(orders, many=True)
-            body['orders'] = serializer.data
+            results = []
+            for order in orders:
+                images = Image.objects.filter(order=order)
+                if images.exists():
+                    order_image = OrderImageSerializer({'info': order, 'images': images})
+                    results.append(order_image.data)
+            body['orders'] = results
             if request.user == user:
                 contracts = Contract.objects.filter(client=user)
                 serializer = ContractSerializer(contracts, many=True)

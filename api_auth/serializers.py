@@ -48,9 +48,10 @@ class LoginSerializer(serializers.Serializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
     class Meta:
         model = Profile
-        fields = ('pfp', 'description')
+        fields = '__all__'
 
 
 class ListTechniciansSerializer(serializers.ModelSerializer):

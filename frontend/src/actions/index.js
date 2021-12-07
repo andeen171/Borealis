@@ -10,4 +10,6 @@ export {
   getContractInfo,
   progressContract,
   finishContract,
+  getProfile,
+  editProfile,
 } from "./main";

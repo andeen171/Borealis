@@ -6,6 +6,7 @@ import HomePage from "./HomePage";
 import OrderDetailPage from "./OrderDetailsPage";
 import CreateOrderPage from "./CreateOrderPage";
 import ContractDetailsPage from "./contractDetailsPage";
+import ProfilePage from "./ProfilePage";
 
 function App() {
   return (
@@ -25,6 +26,12 @@ function App() {
           path="/contract/:contractCode"
           render={(props) => {
             return <ContractDetailsPage {...props} />;
+          }}
+        />
+        <Route
+          path="/profile/:userId"
+          render={(props) => {
+            return <ProfilePage {...props} />;
           }}
         />
       </Switch>

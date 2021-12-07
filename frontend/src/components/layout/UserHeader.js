@@ -15,6 +15,7 @@ import { actionCreators } from "../../actionCreators";
 
 function Header() {
   const is_staff = useSelector((state) => state.auth.user.is_staff);
+  const user_id = useSelector((state) => state.auth.user.id);
   const dispatch = useDispatch();
   const { logout } = bindActionCreators(actionCreators, dispatch);
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -47,8 +48,13 @@ function Header() {
             "aria-labelledby": "basic-button",
           }}
         >
-          <MenuItem onClick={handleClose}>Profile</MenuItem>
-          <MenuItem onClick={handleClose}>My account</MenuItem>
+          <MenuItem
+            component={Link}
+            to={`/profile/${user_id}`}
+            onClick={handleClose}
+          >
+            Profile
+          </MenuItem>
           <MenuItem component={Link} to="/" onClick={logout}>
             Logout
           </MenuItem>

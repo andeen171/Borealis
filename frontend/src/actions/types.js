@@ -19,3 +19,5 @@ export const CREATE_OFFER = "CREATE_OFFER";
 export const ADVANCE_STAGE = "ADVANCE_STAGE";
 export const GET_CONTRACT = "GET_CONTRACT";
 export const FINISH_CONTRACT = "FINISH_CONTRACT";
+export const GET_PROFILE = "GET_PROFILE";
+export const EDIT_PROFILE = "EDIT_PROFILE";

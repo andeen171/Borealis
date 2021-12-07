@@ -13,6 +13,8 @@ import {
   ADVANCE_STAGE,
   GET_CONTRACT,
   FINISH_CONTRACT,
+  GET_PROFILE,
+  EDIT_PROFILE,
 } from "./types";
 
 export const getOrders = () => (dispatch) => {
@@ -55,7 +57,7 @@ export const createOrder = (order, history) => (dispatch, getState) => {
     });
 };
 
-export const getOrderDetails = (orderCode) => (dispatch, getState) => {
+export const getOrderDetails = (orderCode, history) => (dispatch, getState) => {
   axios
     .get(`/api/order/${orderCode}/`, uploadConfig(dispatch, getState))
     .then((res) => {
@@ -69,6 +71,8 @@ export const getOrderDetails = (orderCode) => (dispatch, getState) => {
         dispatch({
           type: AUTH_ERROR,
         });
+      } else if (err.response.status === 404) {
+        dispatch(history.push("/"));
       }
       dispatch(returnErrors(err.response.data, err.response.status));
     });
@@ -114,8 +118,10 @@ export const createOffer =
   };
 
 export const acceptOffer = (info, history) => (dispatch, getState) => {
+  const config = uploadConfig(dispatch, getState);
+  config.headers["Content-Type"] = "Application/json";
   axios
-    .post("/api/offer/accept/", info, tokenConfig(dispatch, getState))
+    .post("/api/offer/accept/", info, config)
     .then((res) => {
       dispatch(
         {
@@ -135,24 +141,25 @@ export const acceptOffer = (info, history) => (dispatch, getState) => {
     });
 };
 
-export const getContractInfo = (contract_id) => (dispatch, getState) => {
-  axios
-    .get(`/api/contract/${contract_id}/`, uploadConfig(dispatch, getState))
-    .then((res) => {
-      dispatch({
-        type: GET_CONTRACT,
-        payload: res.data,
-      });
-    })
-    .catch((err) => {
-      if (err.response.status === 401) {
+export const getContractInfo =
+  (contract_id, history) => (dispatch, getState) => {
+    axios
+      .get(`/api/contract/${contract_id}/`, uploadConfig(dispatch, getState))
+      .then((res) => {
         dispatch({
-          type: AUTH_ERROR,
+          type: GET_CONTRACT,
+          payload: res.data,
         });
-      }
-      dispatch(returnErrors(err.response.data, err.response.status));
-    });
-};
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          dispatch(history.push("/"));
+        } else if (err.response.status === 404) {
+          dispatch(history.push("/"));
+        }
+        dispatch(returnErrors(err.response.data, err.response.status));
+      });
+  };
 
 export const progressContract =
   (contract_id, description, ending_prediction) => (dispatch, getState) => {
@@ -197,6 +204,45 @@ export const finishContract = (contract_id) => (dispatch, getState) => {
         });
       }
       dispatch(returnErrors(err.response.data, err.response.status));
+    });
+};
+
+export const getProfile = (user_id, history) => (dispatch, getState) => {
+  axios
+    .get(`/api/profile/${user_id}`, uploadConfig(dispatch, getState))
+    .then((res) => {
+      dispatch({
+        type: GET_PROFILE,
+        payload: res.data,
+      });
+    })
+    .catch((err) => {
+      if (err.response.status === 404) {
+        dispatch(history.push("/"));
+      } else if (err.response.status === 401) {
+        dispatch({ type: AUTH_ERROR }, history.push("/"));
+      }
+    });
+};
+
+export const editProfile = (user_id, data, history) => (dispatch, getState) => {
+  axios
+    .put(`/api/profile/${user_id}/`, data, uploadConfig(dispatch, getState))
+    .then((res) => {
+      dispatch({
+        type: EDIT_PROFILE,
+        payload: res.data,
+      });
+    })
+    .catch((err) => {
+      if (err.response.status === 401) {
+        dispatch(
+          {
+            type: AUTH_ERROR,
+          },
+          history.push("/")
+        );
+      }
     });
 };
 
